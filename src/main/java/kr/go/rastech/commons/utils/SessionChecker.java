@@ -1,0 +1,113 @@
+package kr.go.rastech.commons.utils;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionBindingEvent;
+import javax.servlet.http.HttpSessionBindingListener;
+
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class SessionChecker implements HttpSessionBindingListener {
+	 
+	private static Hashtable loginUsers = new Hashtable();
+
+    // 세션이 연결시 호출 (해시테이블에 접속자 저장)
+    @Override
+    public void valueBound(HttpSessionBindingEvent event) {
+        loginUsers.put(event.getSession(), event.getName());
+    }
+    // 세션이 끊겼을시 호출
+    @Override
+    public void valueUnbound(HttpSessionBindingEvent event) {
+        loginUsers.remove(event.getSession());
+    }
+    
+    // 입력받은 아이디를 해시테이블에서 삭제
+    public void removeSession(String userId) {
+        Enumeration e = loginUsers.keys();
+        HttpSession session = null;
+        while(e.hasMoreElements()){
+            session = (HttpSession)e.nextElement();
+            if(loginUsers.get(session).equals(userId)){
+                //세션이 invalidate될때 HttpSessionBindingListener를 
+                //구현하는 클레스의 valueUnbound()함수가 호출된다.
+                session.invalidate();
+            }
+       }
+    }
+   /*
+    * 해당 아이디의 동시 사용을 막기위해서 
+    * 이미 사용중인 아이디인지를 확인한다.
+    */
+   public boolean isUsing(String userId){
+       return loginUsers.containsValue(userId);
+   }
+    
+   
+   /*
+    * 로그인을 완료한 사용자의 아이디를 세션에 저장하는 메소드
+    */
+   public void setSession(HttpSession session, String userId){
+       //이순간에 Session Binding이벤트가 일어나는 시점
+       //name값으로 userId, value값으로 자기자신(HttpSessionBindingListener를 구현하는 Object)
+       session.setAttribute(userId, this);//login에 자기자신을 집어넣는다.
+   }
+    
+    
+   /*
+     * 입력받은 세션Object로 아이디를 리턴한다.
+     * @param session : 접속한 사용자의 session Object
+     * @return String : 접속자 아이디
+    */
+   public String getUserID(HttpSession session){
+       return (String)loginUsers.get(session);
+   }
+    
+    
+   /*
+    * 현재 접속한 총 사용자 수
+    * @return int  현재 접속자 수
+    */
+   public int getUserCount(){
+       return loginUsers.size();
+   }
+    
+    
+   /*
+    * 현재 접속중인 모든 사용자 아이디를 출력
+    * @return void
+    */
+   public List<String> selectloginUsers(){
+	   List<String> userList = new ArrayList<String>();
+       Enumeration e = loginUsers.keys();
+       HttpSession session = null;
+       int i = 0;
+       while(e.hasMoreElements()){
+           session = (HttpSession)e.nextElement();
+           userList.add(StringUtil.nvl(loginUsers.get(session)));
+       }
+       //중복제거
+       HashSet<String> userData = new HashSet<String>(userList);
+       userList = new ArrayList<String>(userData);
+       
+       return userList;
+    }
+    
+   /*
+    * 현재 접속중인 모든 사용자리스트를 리턴
+    * @return list
+    */
+   public Collection getUsers(){
+       Collection collection = loginUsers.values();
+       return collection;
+   }
+
+
+}

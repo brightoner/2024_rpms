@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.orgMng.dao.OrgMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 기관 리스트 -->
+	<select id="selectOrgMngList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectOrgMngList */ 	
+ 	 	<include refid="getPagingSelect"></include>
+		 SELECT A.org_id
+		      , (case when A.org_gb = '1' then '소관부처'
+				      when A.org_gb = '2' then '전담기관'
+		            else '일반기관' end ) as  org_gb_nm
+		      , A.org_gb as org_gb      
+		      , A.org_nm
+		      , A.org_crm_no
+		      , A.org_address		      
+		      , date_format(A.create_dttm,'%Y-%m-%d') AS create_dttmL
+		      , date_format(A.modify_dttm,'%Y-%m-%d') AS modify_dttm
+		      , A.org_class
+		      , FN_GET_CODENM(A.org_class) as org_class_nm
+			  , A.org_charge_nm
+			  , A.org_charge_phone
+			  , A.org_charge_mbtlnum
+			  , A.org_charge_email
+		      , A.create_id
+		      , A.modify_id		     
+		   FROM PTL_ORG_MNG  A,  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B   
+		  WHERE 1=1  
+		    AND A.DEL_YN = 'N'	
+	<if test='searchword != "" and searchword != null ' >
+		<if test='searchopt == "org_nm" ' >
+    		AND replace(A.org_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+		</if>
+		
+	</if>
+	
+	<if test='searchClass != "" and searchClass != null ' >
+    		AND A.org_class = #{searchClass}
+	</if>		
+	<if test='searchopt2 != "" and searchopt2 != null ' >
+    		AND A.org_gb = #{searchopt2}
+	</if>		
+  		
+	 ORDER BY CASE 
+        WHEN a.org_nm RLIKE '^[ㄱ-ㅎ가-힣]' THEN 1
+        WHEN a.org_nm RLIKE '^[a-zA-Z]' THEN 2
+        ELSE 3
+    end , a.org_nm
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 기관 리스트 카운트 -->
+	<select id="selectOrgMngTotalCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectOrgMngTotalCount */
+		SELECT COUNT(*)
+		   FROM PTL_ORG_MNG A
+		  WHERE 1=1
+		AND A.DEL_YN = 'N'
+		<if test='searchword != "" and searchword != null ' >
+			<if test='searchopt == "org_nm" ' >
+	    		AND replace(A.org_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			</if>
+			
+		</if>
+		
+		<if test='searchClass != "" and searchClass != null ' >
+	    		AND A.org_class = #{searchClass}
+		</if>	
+		<if test='searchopt2 != "" and searchopt2 != null ' >
+	    		AND A.org_gb = #{searchopt2}
+		</if>	
+		
+	
+	</select>
+	
+		
+	<!-- 기관 상세보기 -->
+	<select id="selectOrgMngCodeList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectOrgMngDtl */
+	     SELECT A.org_id
+		      , (case when A.org_gb = '1' then '소관부처'
+				      when A.org_gb = '2' then '전담기관'
+		            else '일반기관' end ) as  org_gb_nm
+		      , A.org_gb as org_gb      
+		      , A.org_nm
+		      , A.org_crm_no
+		      , A.org_address		      
+		      , date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+		      , date_format(A.modify_dttm,'%Y-%m-%d') AS modify_dttm
+		      , FN_USER_KEY_INFO(A.CREATE_ID , 'ID') AS create_id
+		      , FN_USER_KEY_INFO(A.MODIFY_ID , 'ID') AS modify_id		     
+	       FROM PTL_ORG_MNG A 
+	      WHERE A.org_gb  = #{org_gb}
+	        and A.DEL_YN = 'N'
+    order by CASE 
+        WHEN a.org_nm RLIKE '^[ㄱ-ㅎ가-힣]' THEN 1
+        WHEN a.org_nm RLIKE '^[a-zA-Z]' THEN 2
+        ELSE 3
+    end , a.org_nm
+	</select>	
+	
+	
+	<!-- 기관 상세보기 -->
+	<select id="selectOrgMngDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectOrgMngDtl */
+	     SELECT A.org_id
+		      , (case when A.org_gb = '1' then '소관부처'
+				      when A.org_gb = '2' then '전담기관'
+		            else '일반기관' end ) as  org_gb_nm
+		      , A.org_gb as org_gb      
+		      , A.org_nm
+		      , A.org_crm_no
+		      , A.org_address		      
+		      , A.org_class
+			  , A.org_charge_nm
+			  , A.org_charge_phone
+			  , A.org_charge_mbtlnum
+			  , A.org_charge_email
+		      , date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+		      , date_format(A.modify_dttm,'%Y-%m-%d') AS modify_dttm
+		      , FN_USER_KEY_INFO(A.CREATE_ID , 'ID') AS create_id
+		      , FN_USER_KEY_INFO(A.MODIFY_ID , 'ID') AS modify_id		     
+	       FROM PTL_ORG_MNG A 
+	      WHERE A.org_id =  #{org_id}
+	</select>	
+	
+	<!-- 기관 update -->
+	<update id="updateOrgMng" parameterType="java.util.Map">
+	/* updateOrgMngMng */
+		 UPDATE PTL_ORG_MNG
+		    SET org_gb = #{org_gb,  jdbcType = VARCHAR}
+		   	  , org_crm_no = #{org_crm_no, jdbcType = VARCHAR}
+		   	  , org_nm = #{org_nm, jdbcType = VARCHAR}
+		   	  , org_address = #{org_address, jdbcType = VARCHAR}
+		   	  , org_class = #{org_class, jdbcType = VARCHAR}
+			  , org_charge_nm = #{org_charge_nm, jdbcType = VARCHAR}
+			  , org_charge_phone = #{org_charge_phone, jdbcType = VARCHAR}
+			  , org_charge_mbtlnum = #{org_charge_mbtlnum, jdbcType = VARCHAR}
+			  , org_charge_email = #{org_charge_email, jdbcType = VARCHAR}
+		      , modify_dttm = NOW()
+		      , modify_id = #{modify_id, jdbcType = VARCHAR}
+		  WHERE 1=1
+		    AND org_id = #{org_id}
+	</update>
+	
+	<!-- 기관 update -->
+	<insert id="insertOrgMng" parameterType="java.util.Map">
+	/* insertOrgMngMng */
+		<selectKey keyProperty="org_id" resultType="string" order="BEFORE">
+       SELECT CONCAT('ORG_' , LPAD(NEXTVAL(PTL_ORG_MNG_SEQ),16,0 )) FROM DUAL
+	    </selectKey>
+		 
+		 INSERT INTO PTL_ORG_MNG 
+		 (
+		 	  ORG_ID 
+		 	, ORG_GB
+		 	, ORG_NM
+		 	, ORG_CRM_NO
+		 	, ORG_ADDRESS
+		 	, ORG_CLASS
+			, ORG_CHARGE_NM
+			, ORG_CHARGE_PHONE
+			, ORG_CHARGE_MBTLNUM
+			, ORG_CHARGE_EMAIL
+		 	, CREATE_DTTM
+		 	, CREATE_ID
+		 	, DEL_YN
+		 ) VALUES (
+		 	#{org_id}
+			 , #{org_gb,  jdbcType = VARCHAR}
+			 , #{org_nm,  jdbcType = VARCHAR}
+			 , #{org_crm_no,  jdbcType = VARCHAR}
+			 , #{org_address,  jdbcType = VARCHAR}
+			 , #{org_class,  jdbcType = VARCHAR}
+			 , #{org_charge_nm,  jdbcType = VARCHAR}
+			 , #{org_charge_phone,  jdbcType = VARCHAR}
+			 , #{org_charge_mbtlnum,  jdbcType = VARCHAR}
+			 , #{org_charge_email,  jdbcType = VARCHAR}
+			 , now()
+			 , #{create_id,  jdbcType = VARCHAR}
+			 , 'N'
+		 )
+
+	</insert>
+	
+		
+	<!-- 기관 update -->
+	<update id="deleteOrgMng" parameterType="java.util.Map">
+	/* updateOrgMngMng */
+		 UPDATE PTL_ORG_MNG
+		    SET del_yn = 'Y'		   	  
+		  WHERE 1=1
+		    AND org_id = #{org_id}
+	</update>
+	
+</mapper>

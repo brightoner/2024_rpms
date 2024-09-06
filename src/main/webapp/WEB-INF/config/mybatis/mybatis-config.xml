@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "WEB-INF/config/mybatis/mybatis-3-config.dtd">
+<configuration>
+  <settings>
+    <setting name="cacheEnabled"              value="false"/>
+    <setting name="lazyLoadingEnabled"        value="false"/>
+    <setting name="multipleResultSetsEnabled" value="true"/>
+    <setting name="useColumnLabel"            value="true"/>
+    <setting name="useGeneratedKeys"          value="false"/>
+    <setting name="defaultExecutorType"      value="SIMPLE"/>
+    <setting name="defaultStatementTimeout"  value="60000"/>
+    <setting name="jdbcTypeForNull" value="NULL" />
+  </settings>   
+
+  <!-- Global Alias 지정 -->
+  <typeAliases>
+    <!-- 사용자정보 VO -->
+    <typeAlias alias="userVo" type="kr.go.rastech.commons.login.vo.UserVo"/>
+    <!-- 검색 VO -->
+    <typeAlias alias="CommonsVo" type="kr.go.rastech.commons.vo.CommonsVo"/>
+    <!-- 코드 VO -->
+    <typeAlias alias="codeVo" type="kr.go.rastech.commons.code.vo.CodeVo"/>
+
+    <package name="kr.go.rastech" />
+  </typeAliases>
+
+  <typeHandlers>
+    <!--  java.sql.Timestamp 를 java.util.Date 형으로 반환 -->
+    <typeHandler javaType="java.sql.Timestamp" handler="org.apache.ibatis.type.DateTypeHandler"/>
+    <typeHandler javaType="java.sql.Time"      handler="org.apache.ibatis.type.DateTypeHandler"/>
+    <typeHandler javaType="java.sql.Date"      handler="org.apache.ibatis.type.DateTypeHandler"/>
+  </typeHandlers>
+</configuration>

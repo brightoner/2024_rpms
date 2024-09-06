@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.apply.agmt.dao.AgmtDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 과제협약 전체 list -->
+	<select id="selectAgmtList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectAgmtList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT A.ANN_ID
+		  	 , A.ANN_NM
+		  	 , DATE_FORMAT(A.ANN_DT,'%Y-%m-%d') AS ANN_DT 
+		  	 , A.DEPT_ORG
+		  	 , A.DDCT_ORG
+		  	 , A.ANN_INFO
+		  	 , DATE_FORMAT(A.RCPT_STRTDT,'%Y-%m-%d') AS RCPT_STRTDT
+		   	 , DATE_FORMAT(A.RCPT_ENDDT,'%Y-%m-%d') AS RCPT_ENDDT
+		  	 , A.FILE_GROUP
+		  	 , A.DEL_YN
+		  	 , IFNULL(B.PROJ_ID, '') as PROJ_ID
+		  	 , B.PROJ_RECPT_NO
+		  	 , B.PROJ_TYPE_CD
+		  	 , B.RND_GB
+		  	 , B.TECH_CLS_CD1
+		  	 , B.WEIGHT1
+		  	 , B.TECH_CLS_CD2
+		  	 , B.WEIGHT2
+		  	 , B.TECH_CLS_CD3
+		  	 , B.WEIGHT3
+		  	 , B.SECURTY_LEVL_CD
+		  	 , DATE_FORMAT(B.REQ_DT,'%Y-%m-%d') AS REQ_DT
+		     , B.PROJ_NM_KOR
+		     , B.PROJ_NM_ENG
+		     , B.LEAD_ORG_CD
+		     , DATE_FORMAT(B.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(B.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , DATE_FORMAT(B.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+		     , DATE_FORMAT(B.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+		     , DATE_FORMAT(B.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+		     , DATE_FORMAT(B.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+		     , DATE_FORMAT(B.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+		     , DATE_FORMAT(B.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+		     , B.TOT_COST
+		     , B.GOV_COST
+		     , B.CASH
+		     , B.STOCK
+		     , B.REQ_GB
+		     , (CASE WHEN B.REQ_GB = '1' THEN '신청완료'
+			 		 ELSE '미신청' END ) AS REQ_GB_NM 
+		     , DATE_FORMAT(B.REG_DT,'%Y-%m-%d') AS REG_DT
+		     , B.SEL_GB
+		     , (CASE WHEN B.SEL_GB = '0' OR B.SEL_GB IS NULL THEN '결과등록'
+			 		 WHEN B.SEL_GB = '1' THEN '선정'
+			 		 ELSE '탈락' END ) AS SEL_GB_NM 
+		     , DATE_FORMAT(B.SEL_DT,'%Y-%m-%d') AS SEL_DT
+		     , B.SEL_INFO
+		     , B.AGMT_GB
+		     , (CASE WHEN B.AGMT_GB = '1' THEN '협약완료'
+			 		 ELSE '미협약' END ) AS AGMT_GB_NM 
+		     , DATE_FORMAT(B.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+		     , B.AGMT_INFO
+		     , B.CREATE_ID
+		     , DATE_FORMAT(B.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		 FROM  PTL_ANNOUNCE A
+    LEFT JOIN  PTL_PROJECT B
+		   ON  A.ANN_ID = B.ANN_ID 
+		  AND  B.DEL_YN='N' 
+   INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  B.SEL_GB	= '1'
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  A.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 != ''">
+		  AND  A.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+<!-- 		  AND  SUBSTRING(A.ANN_DT, 1, 4) = #{searchoption3} -->
+		  AND  SUBSTRING(B.AGMT_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchoption4 != null and searchoption4 !=''">
+		  AND  B.AGMT_GB = #{searchoption4}
+		</if>
+		<if test="searchword1 != null and searchword1 !=''">
+		  AND  A.ANN_NM LIKE CONCAT('%', #{searchword1}, '%')
+		</if>
+		<if test="searchword2 != null and searchword2 !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword2}, '%')
+		</if>
+	 ORDER BY  B.PROJ_ID DESC
+		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 과제협약 전체 list count -->
+	<select id="selectAgmtListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectAgmtListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_ANNOUNCE A
+     LEFT JOIN  PTL_PROJECT B
+		    ON  A.ANN_ID = B.ANN_ID 
+		   AND  B.DEL_YN='N' 
+		 WHERE  1=1
+		   AND  A.DEL_YN ='N'
+		   AND  B.SEL_GB	= '1'
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  A.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  A.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+<!-- 		  AND  SUBSTRING(A.ANN_DT, 1, 4) = #{searchoption3} -->
+		 AND  SUBSTRING(B.AGMT_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchoption4 != null and searchoption4 !=''">
+		  AND  B.AGMT_GB = #{searchoption4}
+		</if>
+		<if test="searchword1 != null and searchword1 !=''">
+		  AND  A.ANN_NM LIKE CONCAT('%', #{searchword1}, '%')
+		</if>
+		<if test="searchword2 != null and searchword2 !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword2}, '%')
+		</if>
+	</select>
+	
+
+	
+</mapper>

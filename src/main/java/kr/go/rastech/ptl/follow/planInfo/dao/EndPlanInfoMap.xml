@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.planInfo.dao.EndPlanInfoDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 
+ 
+ 	<!-- 종료된 협약과제 list (종료사후과제의 대상 목록 list) -->
+ 	<select id="selectEndTargetList" parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndTargetList */
+ 	<include refid="getPagingSelect"></include>
+		SELECT D.DEPT_ORG 
+		     , D.DDCT_ORG
+		     , D.ANN_ID 
+		     , A.PROJ_ID 
+		     , A.PROJ_NM_KOR 
+		     , DATE_FORMAT(A.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(A.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , B.PROJ_YEAR_GB 
+		     , B.PROJ_STEP_GB 
+		     , C.YEAR_END_GB 
+		     , (CASE WHEN E.MAX_PROJ_END_GB IS NOT NULL THEN E.MAX_PROJ_END_GB
+		            ELSE '0'
+		       END) AS MAX_PROJ_END_GB
+		 FROM  PTL_PROJECT A
+   INNER JOIN  PTL_PROJECT_YEAR B 
+           ON  A.PROJ_ID = B.PROJ_ID
+   INNER JOIN  PTL_YEAR_EVALUATE C 
+           ON  B.PROJ_YEAR_ID = C.PROJ_YEAR_ID
+   INNER JOIN  PTL_ANNOUNCE D 
+           ON  A.ANN_ID = D.ANN_ID	
+    LEFT JOIN  (SELECT  D.PROJ_ID
+                     ,  MAX(D.PROJ_END_GB) AS MAX_PROJ_END_GB
+                  FROM  ptl_project_end D
+     		  GROUP BY  D.PROJ_ID) E 
+     	  ON  A.PROJ_ID = E.PROJ_ID
+	    WHERE  1=1
+		  AND  C.YEAR_END_GB = 'YEAR_END'
+		<if test="dept_org != null and dept_org !=''">
+		  AND  D.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  D.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+		<include refid="getPagingWhere"></include>
+ 	</select>
+ 
+ 	<!-- 종료된 협약과제 list count (종료사후과제의 대상 목록 list count) -->
+	<select id="selectEndTargetListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndTargetListCount */ 
+		SELECT COUNT(1)
+		 FROM  PTL_PROJECT A
+    INNER JOIN  PTL_PROJECT_YEAR B 
+           ON  A.PROJ_ID = B.PROJ_ID
+   INNER JOIN  PTL_YEAR_EVALUATE C 
+           ON  B.PROJ_YEAR_ID = C.PROJ_YEAR_ID
+   INNER JOIN  PTL_ANNOUNCE D 
+           ON  A.ANN_ID = D.ANN_ID	
+    LEFT JOIN  (SELECT  D.PROJ_ID
+                     ,  MAX(D.PROJ_END_GB) AS MAX_PROJ_END_GB
+                  FROM  ptl_project_end D
+     		  GROUP BY  D.PROJ_ID) E 
+     	  ON  A.PROJ_ID = E.PROJ_ID
+	    WHERE  1=1
+		  AND  C.YEAR_END_GB = 'YEAR_END'
+		<if test="dept_org != null and dept_org !=''">
+		  AND  D.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  D.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 종료과제 유무 확인 -->
+	<select id="chkEndPlan" parameterType="java.util.Map"  resultType="integer">
+	/* chkEndPlan */ 
+		SELECT  COUNT(1)
+		  FROM  PTL_PROJECT_END
+		 WHERE  PROJ_ID = #{proj_id_target}
+		   AND  PROJ_END_GB = #{proj_end_gb}
+	
+	</select>
+	
+	<!-- 종료과제 생성 -->
+	<insert id="insertEndPlan" parameterType="java.util.Map">
+	/* insertEndPlan */
+		INSERT into PTL_PROJECT_END (
+				  PROJ_END_ID
+				, PROJ_ID
+				, PROJ_END_GB
+				, DEL_YN
+				, END_FILE_GROUP
+				, CREATE_ID
+				, CREATE_DTTM
+			) values (
+				   (SELECT CONCAT('PEND_' , LPAD(NEXTVAL(PTL_PROJECT_END_SEQ),15,0 )) FROM DUAL)
+				, #{proj_id_target, jdbcType=VARCHAR}	
+				, #{proj_end_gb, jdbcType=VARCHAR}	
+				, 'N'
+				, #{end_file_group, jdbcType=VARCHAR}	
+				, #{create_id, jdbcType=VARCHAR}	
+				, NOW()
+	)
+	</insert>
+	
+	
+	<!-- ######################################################################### -->
+	
+	
+ 	<!-- 종료사후관리 기본정보 list -->
+	<select id="selectEndPlanInfoList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndPlanInfoList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  C.ANN_ID 
+		      , C.ANN_NO 
+		      , C.DEPT_ORG 
+		      , C.DDCT_ORG 
+		      , B.PROJ_NM_KOR 
+		      , DATE_FORMAT(B.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		      , DATE_FORMAT(B.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		      , A.PROJ_END_ID 
+		      , A.PROJ_ID 
+		      , A.PROJ_END_GB 
+		      , A.DEL_YN 
+		      , A.END_FILE_GROUP 
+		  FROM  PTL_PROJECT_END A
+	INNER JOIN  PTL_PROJECT B
+		    ON  A.PROJ_ID = B.PROJ_ID 
+	INNER JOIN  PTL_ANNOUNCE C
+			ON  B.ANN_ID = C.ANN_ID
+	INNER JOIN	(SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		 WHERE  1=1  
+		   AND  A.DEL_YN ='N'
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  C.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  C.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+		  AND  SUBSTRING(B.PERFORM_STRTDT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	  ORDER BY  B.PROJ_NM_KOR DESC, A.PROJ_END_GB DESC 
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	
+	<!-- 종료사후관리 기본정보 count -->
+	<select id="selectEndPlanInfoListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndPlanInfoListCount */ 
+		SELECT COUNT(1)
+		  FROM  PTL_PROJECT_END A
+	INNER JOIN  PTL_PROJECT B
+			ON  A.PROJ_ID = B.PROJ_ID 
+	INNER JOIN  PTL_ANNOUNCE C
+			ON  B.ANN_ID = C.ANN_ID
+		 WHERE  1=1
+	 	   AND  A.DEL_YN ='N'
+	 	<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  C.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  C.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+		  AND  SUBSTRING(B.PERFORM_STRTDT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 종료사후관리 기본정보 상세보기 -->
+	<select id="selectEndPlanInfoDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectEndPlanInfoDtl */
+		SELECT A.PROJ_END_ID
+			 , A.PROJ_ID
+			 , A.PROJ_END_GB
+			 , A.DEL_YN
+			 , A.END_FILE_GROUP
+			 , A.CREATE_ID
+			 , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			 , A.MODIFY_ID
+			 , DATE_FORMAT(A.MODIFY_DTTM,'%Y-%m-%d') AS MODIFY_DTTM
+			 , B.ANN_ID
+			 , B.PROJ_RECPT_NO
+			 , B.PROJ_TYPE_CD
+			 , B.RND_GB
+			 , B.TECH_CLS_CD1
+			 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD1 ) AS TECH_CLS_NM1
+			 , B.WEIGHT1
+			 , B.TECH_CLS_CD2
+			 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD2 ) AS TECH_CLS_NM2
+			 , B.WEIGHT2
+			 , B.TECH_CLS_CD3
+			 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD3 ) AS TECH_CLS_NM3
+			 , B.WEIGHT3
+			 , B.SECURTY_LEVL_CD
+			 , DATE_FORMAT(B.REQ_DT,'%Y-%m-%d') AS REQ_DT
+			 , B.PROJ_NM_KOR
+			 , B.PROJ_NM_ENG
+			 , B.LEAD_ORG_CD
+			 , DATE_FORMAT(B.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+			 , DATE_FORMAT(B.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+			 , DATE_FORMAT(B.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+			 , DATE_FORMAT(B.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+			 , DATE_FORMAT(B.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+			 , DATE_FORMAT(B.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+			 , DATE_FORMAT(B.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+			 , DATE_FORMAT(B.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+			 , B.TOT_COST
+			 , B.GOV_COST
+			 , B.CASH
+			 , B.STOCK
+			 , B.REQ_GB
+			 , DATE_FORMAT(B.REG_DT,'%Y-%m-%d') AS REG_DT
+			 , B.SEL_GB
+			 , DATE_FORMAT(B.SEL_DT,'%Y-%m-%d') AS SEL_DT
+			 , B.SEL_INFO
+			 , B.AGMT_GB
+			 , DATE_FORMAT(B.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+			 , B.AGMT_INFO
+			 , C.ANN_ID
+		     , C.DEPT_ORG
+		  	 , C.DDCT_ORG
+		  	 , C.ANN_NM
+		  	 , C.ANN_NO 
+			 , DATE_FORMAT(C.ANN_DT ,'%Y-%m-%d') AS ANN_DT 
+		  	 , C.FILE_GROUP
+		 FROM  PTL_PROJECT_END A
+    LEFT JOIN  PTL_PROJECT B
+		   ON  A.PROJ_ID = B.PROJ_ID 
+	LEFT JOIN  PTL_ANNOUNCE C
+		   ON  B.ANN_ID = C.ANN_ID 
+		WHERE  1=1
+		 AND  A.PROJ_END_ID = #{proj_end_id} 
+	</select>	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

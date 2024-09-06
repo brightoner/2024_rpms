@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.end.employ.dao.EndEmployDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 종료사후관리 채용 list -->
+	<select id="selectEndEmployList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndEmployList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.END_EMPLOY_ID
+			  , A.PROJ_END_ID
+			  , DATE_FORMAT(A.END_EMPLOY_DT,'%Y-%m-%d') AS END_EMPLOY_DT
+			  , A.END_EMPLOY_GB
+			  , A.END_EMPLOY_YOUTH_GB
+			  , A.END_EMPLOY_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , B.RESP_NM 
+			  , B.RESP_BIRTH 
+			  , B.RESP_ORG 
+			  , B.RESP_DEPT 
+			  , B.RESP_POSITION
+			  , B.RESP_EMAIL 
+			  , B.RESP_MBTLNUM 
+		  FROM  PTL_END_FOLLOW_EMPLOY A
+	INNER JOIN  PTL_RESP_MNG B
+		    ON  A.END_EMPLOY_CD  = B.RESP_ID 
+	INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+ 		 WHERE  1=1  
+ 		   AND  PROJ_END_ID = #{proj_end_id}
+ 	  ORDER BY   B.RESP_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 종료사후관리 채용 count -->
+	<select id="selectEndEmployListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndEmployListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_END_FOLLOW_EMPLOY A
+	INNER JOIN  PTL_RESP_MNG B
+		    ON  A.END_EMPLOY_CD  = B.RESP_ID 
+		 WHERE  1=1
+		   AND  PROJ_END_ID = #{proj_end_id}
+	</select>
+	
+	
+	<!-- 종료사후관리 채용 상세보기 -->
+	<select id="selectEndEmployDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectENDEmployDtl */
+		SELECT  A.END_EMPLOY_ID
+			  , A.PROJ_END_ID
+			  , A.END_EMPLOY_CD
+			  , DATE_FORMAT(A.END_EMPLOY_DT,'%Y-%m-%d') AS END_EMPLOY_DT
+			  , A.END_EMPLOY_GB
+			  , A.END_EMPLOY_YOUTH_GB
+			  , A.END_EMPLOY_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , B.RESP_NM 
+			  , B.RESP_BIRTH 
+			  , B.RESP_ORG 
+			  , B.RESP_DEPT 
+			  , B.RESP_POSITION
+			  , B.RESP_EMAIL 
+			  , B.RESP_MBTLNUM 
+		 FROM  PTL_END_FOLLOW_EMPLOY A
+   INNER JOIN  PTL_RESP_MNG B
+		   ON  A.END_EMPLOY_CD  = B.RESP_ID 
+		WHERE  1=1
+		  AND  A.END_EMPLOY_ID = #{end_employ_id} 
+	</select>	
+	
+	
+	<!-- 종료사후관리 채용자 등록 -->
+	<insert id="insertEndEmploy" parameterType="java.util.Map">
+	/* insertEndEmploy */
+		  INSERT INTO  PTL_END_FOLLOW_EMPLOY (  
+					END_EMPLOY_ID
+				  , PROJ_END_ID
+				  , END_EMPLOY_CD
+				  , END_EMPLOY_DT
+				  , END_EMPLOY_GB
+				  , END_EMPLOY_YOUTH_GB
+				  , END_EMPLOY_INFO
+				  , CREATE_ID
+				  , CREATE_DTTM
+			    ) VALUES (
+			        (SELECT CONCAT('EMPl_' , LPAD(NEXTVAL(PTL_END_FOLLOW_EMPLOY_SEQ),15,0 )) FROM DUAL)	
+				  , #{proj_end_id_employ, jdbcType=VARCHAR}	
+				  , #{end_employ_cd, jdbcType=VARCHAR}	
+				  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{end_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					      ELSE DATE_FORMAT(STR_TO_DATE(#{end_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+				     END)
+				  , #{end_employ_gb, jdbcType=VARCHAR}	
+				  , #{end_employ_youth_gb, jdbcType=VARCHAR}
+				  , #{end_employ_info, jdbcType=VARCHAR}
+				  , #{create_id, jdbcType=VARCHAR}
+				  , NOW()
+			    )
+			  ON DUPLICATE KEY UPDATE
+			  	    END_EMPLOY_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{end_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									      ELSE DATE_FORMAT(STR_TO_DATE(#{end_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								     END)
+				  , END_EMPLOY_GB	= #{end_employ_gb, jdbcType=VARCHAR}	
+				  , END_EMPLOY_YOUTH_GB = #{end_employ_youth_gb, jdbcType=VARCHAR}
+				  , END_EMPLOY_INFO = #{end_employ_info, jdbcType=VARCHAR}
+				  , MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+				  , MODIFY_DTTM	= now()
+    </insert>
+    
+    
+    <!-- 종료사후관리 채용자 삭제 -->
+	<delete id="deleteEndEmploy" parameterType="java.util.Map">
+	/* deleteEndEmploy */
+		DELETE
+		  FROM  PTL_END_FOLLOW_EMPLOY
+		 WHERE  1=1
+		   AND  END_EMPLOY_ID = #{end_employ_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

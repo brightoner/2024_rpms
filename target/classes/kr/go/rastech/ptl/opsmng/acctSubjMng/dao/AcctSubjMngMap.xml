@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.acctSubjMng.dao.AcctSubjMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+  <select id="readAcctSubjMngList" resultType="AcctSubjMngVo" parameterType="AcctSubjMngVo">
+	SELECT   
+          SUBJ_ID as subj_id               /*  고유ID */ 
+        , SUBJ_NM as subj_nm               /*  명 */ 
+        , SUBJ_LEVL as subj_levl           /* 레벨 */ 
+        , SUBJ_NO as subj_no           /* 레벨 */ 
+        , ifnull(SUBJ_PRTS_ID,'0') as subj_prts_id     /* 상위  ID */ 
+        , USE_YN as use_yn       /*  사용여부 */         
+        , MODIFY_DTTM as MODIFY_DTTM     /*  수정일시 */ 
+        , modify_id as modify_id         /*  수정자 */ 
+        , CREATE_DTTM as create_dttm       /*  생성일시 */ 
+        , CREATE_ID as create_id           /*  생성자 */ 
+     FROM PTL_ACCOUNT_SUBJECT_CODE                         /* 관리 */ 
+    WHERE 1=1 
+ 	<if test="subj_id != null and subj_id != ''">
+ 		AND SUBJ_ID = #{subj_id, jdbcType = VARCHAR} 
+ 	</if>
+    ORDER BY SUBJ_LEVL , SUBJ_ID
+  </select>
+
+
+ 
+  <insert id="insertAcctSubjMng" parameterType="AcctSubjMngVo">
+   INSERT INTO 
+        PTL_ACCOUNT_SUBJECT_CODE  /* 관리 */ 
+        ( 
+          SUBJ_ID
+        , SUBJ_NM
+        , SUBJ_LEVL
+        , SUBJ_NO
+        , SUBJ_PRTS_ID
+        , USE_YN
+        , MODIFY_DTTM
+        , modify_id
+        , CREATE_DTTM
+        , CREATE_ID
+     ) 
+ VALUES 
+     ( 
+          #{subj_id, jdbcType=VARCHAR}         /*  고유id */ 
+        , #{subj_nm, jdbcType=VARCHAR}         /*  명 */ 
+        , #{subj_levl, jdbcType=VARCHAR}       /* 레벨 */ 
+        , #{subj_no, jdbcType=VARCHAR}        
+        , ifnull(#{subj_prts_id, jdbcType=VARCHAR},'')    /* 상위  id */ 
+        , #{use_yn, jdbcType=VARCHAR}     /*  사용여부 */    
+        , now()            /*  수정일시 */ 
+        , #{modify_id, jdbcType = VARCHAR}          /*  수정자 */ 
+        , now()            /*  생성일시 */ 
+        , #{create_id, jdbcType = VARCHAR}           /*  생성자 */ 
+     ) 
+  
+  </insert>
+
+  <update id="updateAcctSubjMng"  parameterType="AcctSubjMngVo">
+    UPDATE 
+          PTL_ACCOUNT_SUBJECT_CODE  /* 관리 */ 
+      SET 
+          SUBJ_NM =  #{subj_nm, jdbcType=VARCHAR}    /*  명 */  
+        , SUBJ_LEVL =  #{subj_levl, jdbcType=VARCHAR}    /* 레벨 */ 
+        , SUBJ_NO =  #{subj_no, jdbcType=VARCHAR}    /* 레벨 */ 
+        , SUBJ_PRTS_ID =  #{subj_prts_id, jdbcType=VARCHAR}    /* 상위  ID */ 
+        , USE_YN =  #{use_yn, jdbcType=VARCHAR}    /*  사용여부 */     
+        , MODIFY_DTTM =  now()    /*  수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}   /*  수정자 */ 
+ WHERE 1=1 
+   AND SUBJ_ID = #{subj_id, jdbcType = VARCHAR} 
+  </update>
+
+  <delete id="deleteAcctSubjMng" parameterType="AcctSubjMngVo">
+    DELETE FROM PTL_ACCOUNT_SUBJECT_CODE
+      WHERE SUBJ_ID IN
+                  (SELECT SUBJ_ID
+                     FROM PTL_ACCOUNT_SUBJECT_CODE
+                    WHERE SUBJ_PRTS_ID IN
+                                (SELECT SUBJ_ID
+                                   FROM PTL_ACCOUNT_SUBJECT_CODE
+                                  WHERE 1 = 1
+                                        AND (SUBJ_PRTS_ID = #{subj_id} OR SUBJ_ID = #{subj_id}))
+            	UNION ALL
+                   SELECT SUBJ_ID
+                     FROM PTL_ACCOUNT_SUBJECT_CODE
+                    WHERE 1 = 1
+                      AND SUBJ_ID = #{subj_id})
+  </delete>
+  
+  
+  <update id="updateAcctSubjMngDtl" parameterType="AcctSubjMngVo">
+    UPDATE 
+          PTL_ACCOUNT_SUBJECT_CODE  /* 관리 */ 
+      SET 
+          USE_YN =  CASE WHEN #{use_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE USE_YN END    /*  사용여부 */ 
+        , MODIFY_DTTM =  now()    /*  수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}    /*  수정자 */ 
+ WHERE 1=1 
+   AND SUBJ_PRTS_ID = #{subj_id, jdbcType = VARCHAR}   
+  </update>
+  
+</mapper>

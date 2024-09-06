@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.sch.dao.SchDao">
+
+	<select id="selectEtlList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+        SELECT ETL_SN as etl_sn 
+        	,ETL_ID as etl_id 
+        	,ETL_NM as etl_nm 
+        	,ETL_TYPE as etl_type 
+        	,ETL_TIME as etl_time 
+        	,ETL_TB as etl_tb 
+        	,ETL_GBN as etl_gbn 
+        	,ETL_HH as etl_hh 
+        	,ETL_SS as etl_ss 
+        	,NEXT_DT as next_dt 
+        	,USE_YN as use_yn 
+        FROM DW_ETL_MNTR       
+       WHERE 1=1
+           <if test = "strEtlnm != null and strEtlnm != ''">
+           		AND ETL_NM LIKE '%'||#{strEtlnm}||'%'
+           </if>         
+           <if test = "strEtlid != null and strEtlid != ''">
+           		AND ETL_ID LIKE '%'||#{strEtlid}||'%'
+           </if>         
+        order by etl_sn 
+	</select>
+	
+	<select id="selectUseEtlList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+        SELECT ETL_SN as etl_sn 
+        	,ETL_ID as etl_id 
+        	,ETL_NM as etl_nm 
+        	,ETL_TYPE as etl_type 
+        	,ETL_TIME as etl_time 
+        	,ETL_TB as etl_tb 
+        	,ETL_GBN as etl_gbn 
+        	,ETL_HH as etl_hh 
+        	,ETL_SS as etl_ss 
+        	,NEXT_DT as next_dt 
+        	,USE_YN as use_yn 
+        FROM DW_ETL_MNTR       
+       WHERE 1=1
+         AND use_yn ='Y'
+        order by etl_sn 
+	</select>
+	<!-- 이력 한달만 조회 -->
+	<select id="selectEtlDtlList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		 SELECT 
+               ETL_SN as etl_sn     
+             , ETL_DTL_SN as etl_dtl_sn       
+             , ETL_PRC_DT as etl_prc_dt       
+             , TO_CHAR(ETL_CNT,'999,999,999,999') as etl_cnt       
+             , ETL_ERR_YN as etl_err_yn       
+             , ETL_PRC_YN as etl_prc_yn       
+             , PROC_TYPE as proc_type       
+          FROM DBO.DW_ETL_DTL_MNTR      
+         WHERE 1=1  
+           AND ETL_SN = #{strEtlsn}   
+           <if test = "strEtldt != null and strEtldt != ''">
+           		AND TO_DATE(SUBSTR(ETL_PRC_DT,0,10))  BETWEEN sysdate -#{strEtldt} AND sysdate
+           </if>
+           
+         ORDER BY etl_dtl_sn desc 
+	</select>
+	<!-- ETL 마스터 저장 -->
+	<insert id="insertEtl" parameterType="hashmap" >
+	<![CDATA[ 
+		INSERT INTO 
+		DW_ETL_MNTR 
+				(
+			 	 ETL_SN
+			   , ETL_ID
+			   , ETL_TYPE
+			   , ETL_TIME
+			   , ETL_TB
+			   , ETL_HH
+			   , ETL_SS
+			   , NEXT_DT
+			   , USE_YN
+			   ,  ETL_NM
+			   , ETL_GBN
+			   ) 
+			VALUES (  
+			(SELECT nvl(MAX(ETL_SN),0) + 1  FROM DW_ETL_MNTR a ),
+			#{etl_id},
+			#{etl_type},
+			#{etl_time},
+			#{etl_tb},
+			#{etl_hh},
+			#{etl_ss},
+			#{next_dt},
+			#{use_yn},
+			#{etl_nm},
+			#{etl_gbn} 
+			)
+			]]>
+	</insert>
+	<!-- ETL 마스터 수정 -->
+	<update id="updateEtl" parameterType="hashmap" >
+	<![CDATA[ 
+		UPDATE DW_ETL_MNTR
+		SET    ETL_ID   = #{etl_id, jdbcType=VARCHAR},
+		       ETL_TYPE = #{etl_type, jdbcType=VARCHAR},
+		       ETL_TIME = #{etl_time, jdbcType=VARCHAR},
+		       ETL_TB   = #{etl_tb, jdbcType=VARCHAR},
+		       ETL_HH   = #{etl_hh, jdbcType=VARCHAR},
+		       ETL_SS   = #{etl_ss, jdbcType=VARCHAR},
+		       NEXT_DT  = #{next_dt, jdbcType=VARCHAR},
+		       USE_YN   = #{use_yn, jdbcType=VARCHAR},
+		       ETL_NM   = #{etl_nm, jdbcType=VARCHAR},
+		       ETL_GBN  = #{etl_gbn, jdbcType=VARCHAR}
+		WHERE  ETL_SN   = #{etl_sn}
+		]]>
+	</update>
+	<!-- ETL 상세 삭제  -->
+	<delete id="deleteEtlDtl" parameterType="hashmap" >
+		DELETE FROM
+		       DBO.DW_ETL_DTL_MNTR 
+		 WHERE ETL_SN =#{etl_sn}
+	</delete>
+	<!--  ETL 마스터 삭제-->
+	<delete id="deleteEtl" parameterType="hashmap" >
+		DELETE FROM
+		       DW_ETL_MNTR 
+		 WHERE ETL_SN =#{etl_sn}	
+	</delete>
+	
+	<!-- ETL 다음 실행일시 수정 -->
+	<update id="updateNextDt" parameterType="java.util.Map" >
+		UPDATE
+              DW_ETL_MNTR 
+           SET NEXT_DT = #{next_dt}  
+         WHERE 1=1 
+           AND ETL_SN = #{etl_sn} 
+	</update>
+	
+	<!-- ETL건수 수정목록 조회 -->
+	<select id="selectEtlUpdList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	   SELECT DISTINCT B.ETL_SN 
+    	    , A.ETL_TB
+    	    , A.ETL_GBN 
+    	    , B.ETL_PRC_DT
+    	 FROM DW_ETL_MNTR A
+    	    , DBO.DW_ETL_DTL_MNTR B
+    	 WHERE A.ETL_SN = B.ETL_SN
+    	  AND B.ETL_PRC_YN ='N'
+    	  AND B.ETL_ERR_YN ='N'
+    	  AND A.ETL_ID = #{etl_id}
+	</select>
+	<!-- ETL 건수 업데이트-->
+	<update id="updateEtlCnt" parameterType="hashmap" >
+	<![CDATA[ 
+           UPDATE 
+                 DBO.DW_ETL_DTL_MNTR 
+	             SET 
+	                   ETL_CNT = 
+		    	               ( SELECT COUNT(*) 
+		    	                   FROM ${etl_tb} 
+		                     )
+		             , ETL_PRC_YN = 'Y'   
+		         WHERE 1=1 
+	               AND ETL_SN = #{etl_sn}
+	               AND ETL_PRC_YN  = 'N' 
+	         ]]>
+	</update>
+	
+	
+	<insert id="insertEtlDtl" parameterType="hashmap" >
+	<![CDATA[ 
+		 INSERT INTO DBO.DW_ETL_DTL_MNTR ( 
+		   ETL_SN 
+		 , ETL_DTL_SN 
+		 , ETL_PRC_DT 
+		 , ETL_CNT 
+		 , ETL_ERR_YN 
+		 , ETL_PRC_YN 
+		 , PROC_TYPE 
+		 ) 
+		 VALUES 
+		 ( 
+		  #{ETL_SN} 
+		 ,(SELECT NVL(MAX(ETL_DTL_SN),0) + 1 FROM DBO.DW_ETL_DTL_MNTR WHERE ETL_SN = #{ETL_SN})  
+		 ,TO_CHAR(sysdate , 'yyyy/MM/dd HH24:MI')
+		 ,NVL(#{ETL_CNT},0) 
+		 ,NVL(#{ETL_ERR_YN},'N') 		
+		 ,NVL(#{ETL_PRC_YN},'N') 				
+		 ,#{PROC_TYPE} 	   
+		 )
+		  ]]>
+	</insert>
+	
+	<select id="selectSpList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+			SELECT SP_ID
+		          , SP_USER
+		          , SP_PWD
+		      FROM DBO.DW_SP_MNG A
+		     WHERE 1=1
+        <if test = "PROP_ID != null and PROP_ID != ''">
+       		AND A.SP_ID = #{prop_id}
+       </if>
+            ORDER BY 1
+	</select>
+
+	<select id="selectEtlStat"  resultType="kr.go.rastech.commons.utils.LowerKeyMap" parameterType="java.util.Map">
+SELECT JOB_GBN
+         , COUNT(*) AS TOT_CNT 
+         , COUNT(*) - NVL(SUM(CASE WHEN ETL_ERR_YN ='Y' THEN 1 ELSE 0 END ),0) AS PROC_CNT
+         , CASE WHEN  NVL(SUM(CASE WHEN ETL_ERR_YN ='Y' THEN 1 ELSE 0 END ),0)  > 0 THEN '에러' ELSE '정상' END  AS ETL_ERR_YN       
+    FROM (
+  SELECT  CASE WHEN INSTR(A.ETL_ID,'PAV')  != 0 THEN '포장관리' 
+                      WHEN INSTR(A.ETL_ID,'LMC')  != 0 THEN '차선관리' 
+                      WHEN INSTR(A.ETL_ID,'STR')  != 0 THEN '구조물' 
+                      WHEN INSTR(A.ETL_ID,'FCP')  != 0 THEN '건설안전' 
+                      WHEN INSTR(A.ETL_ID,'TER')  != 0 THEN '터널전력량' 
+                      WHEN INSTR(A.ETL_ID,'LCC')  != 0 THEN '생애주기비용' 
+                      WHEN INSTR(A.ETL_ID,'REV')  != 0 THEN '화물차량' 
+                      ELSE '기타(공통)'
+               END AS JOB_GBN
+           , CASE WHEN INSTR(A.ETL_ID,'PAV')  != 0 THEN 1
+                      WHEN INSTR(A.ETL_ID,'LMC')  != 0 THEN 2
+                      WHEN INSTR(A.ETL_ID,'STR')  != 0 THEN 3
+                      WHEN INSTR(A.ETL_ID,'FCP')  != 0 THEN 4
+                      WHEN INSTR(A.ETL_ID,'TER')  != 0 THEN 5
+                      WHEN INSTR(A.ETL_ID,'LCC')  != 0 THEN 6
+                      WHEN INSTR(A.ETL_ID,'REV')  != 0 THEN 7
+                      ELSE 8
+               END AS JOB_ORD
+           , B.ETL_ERR_YN AS ETL_ERR_YN
+         FROM DW_ETL_MNTR A
+           , (SELECT B.*
+                        , ROW_NUMBER() OVER(PARTITION BY ETL_SN ORDER BY ETL_DTL_SN DESC) AS R_NUM
+                FROM DBO.DW_ETL_DTL_MNTR B
+             ORDER BY  ETL_DTL_SN DESC) B
+         WHERE A.ETL_SN = B.ETL_SN(+)
+              AND B.R_NUM(+) = 1
+  )
+GROUP BY JOB_GBN
+  ORDER BY MAX(JOB_ORD)	
+	
+	</select>
+	
+	<!-- ETL 상태 초기화 -->
+	<update id="updateEtlStat" >
+	<![CDATA[ 
+   UPDATE DBO.DW_ETL_DTL_MNTR
+      SET ETL_ERR_YN ='N'
+   	    , ETL_PRC_YN ='Y'
+   WHERE (ETL_SN,ETL_DTL_SN) IN (SELECT ETL_SN
+                                      , MAX(ETL_DTL_SN) 
+                              	   FROM DBO.DW_ETL_DTL_MNTR
+                                  GROUP BY ETL_SN
+                                 )
+		]]>
+	</update>
+	
+	
+</mapper>

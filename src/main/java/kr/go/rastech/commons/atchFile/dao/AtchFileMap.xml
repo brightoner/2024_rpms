@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.commons.atchFile.dao.AtchFileDao">
+
+
+
+	<!-- 전체 첨부파일 조회-->
+	<select id="selectAtchFileDetail"  parameterType="atchFileVO" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		/* AtchFileDao.selectAtchFileDetail */
+		SELECT   FILE_ID
+		       , SUB_FILE_ID
+		       , FILE_NM
+		       , FILE_PATH
+		       , ORGN_FILE_NM
+		       , FILE_EXT
+		       , FILE_SIZE
+		       , DEL_YN
+		       , CREATE_DTTM
+		       , FILE_GB
+		       , FILE_GROUP
+		  FROM   PTL_ATCHFILE
+		 WHERE   FILE_GROUP = #{fileGroup}
+		   AND   FILE_GB = #{fileGb}
+		   AND   DEL_YN='N'
+	</select>
+
+	<!-- 특정첨부파일조회 -->
+	<select id="getFileDetail" parameterType="atchFileVO" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		/* AtchFileDao.getFileDetail */
+		SELECT   FILE_ID
+		       , SUB_FILE_ID
+		       , FILE_NM
+		       , FILE_PATH
+		       , ORGN_FILE_NM
+		       , FILE_EXT
+		       , FILE_SIZE
+		       , DEL_YN
+		       , CREATE_DTTM
+		       , FILE_GB
+		       , FILE_GROUP
+		  FROM   PTL_ATCHFILE
+		 WHERE   FILE_ID = #{fileId}
+	</select>
+
+
+	<!-- 첨부파일 insert를 위한 file_id 채번 -->
+	<select id="getFileId" parameterType="atchFileVO" resultType="int" >
+		/* AtchFileDao.getFileId */
+		SELECT  NVL(MAX(SUB_FILE_ID),0)
+		  FROM  PTL_ATCHFILE
+		 WHERE  FILE_GROUP = #{fileGroup}
+	</select>
+
+	<!-- 첨부파일 파일 저장 -->
+	<insert id="insetAttFile" parameterType="atchFileVO">
+	    /* AtchFileDao.insetAttFile */
+		INSERT INTO  PTL_ATCHFILE (
+		             FILE_ID
+		       	   , SUB_FILE_ID
+			       , FILE_NM
+			       , FILE_PATH
+			       , ORGN_FILE_NM
+			       , FILE_EXT
+			       , FILE_SIZE
+			       , DEL_YN
+			       , FILE_GB
+			       , FILE_GROUP
+			       , CREATE_DTTM
+		       ) VALUES (
+				  	 NEXTVAL(PTL_ATCHFILE_seq)
+		           , #{subFileId}
+		           , #{fileNm}
+		           , #{filePath}
+		           , #{orgnFileNm}
+		           , #{fileExt}
+		           , #{fileSize}
+		           , 'N'
+		           , #{fileGb}
+		           , #{fileGroup}
+		           , NOW()
+		       )
+	</insert>
+
+
+	<!-- 첨부파일 삭제 -->
+	<update id="deleteAttFile" parameterType="atchFileVO">
+	/* AtchFileDao.deleteAttFile */
+		UPDATE  PTL_ATCHFILE
+		   SET  DEL_YN = 'Y'
+		 WHERE  FILE_GROUP = #{fileGroup}
+		   AND  FILE_ID = #{fileId}
+	</update>
+
+
+
+
+</mapper>

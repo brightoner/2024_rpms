@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.content.faq.dao.FaqMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	<select id="selectFaqList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	 	<include refid="getPagingSelect"></include>
+ 	/* selectFaqList */ 	
+
+		 SELECT  a.faq_id
+			  ,  a.faq_title
+			  ,  a.faq_contents
+			  ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			  ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			  ,  a.faq_order
+			  ,  a.create_id
+			  ,  a.modify_id		 		  		 
+		   FROM  PTL_FAQ a ,	(SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B     
+		  WHERE  1 = 1				    
+		    AND a.DEL_YN = 'N'
+		  	<if test='searchopt == "pu_subject" ' >
+		    	AND a.faq_title like concat('%',#{searchword},'%')
+			</if>			     
+			 ORDER BY a.faq_id DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<select id="selectFaqTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		FROM
+		    PTL_FAQ
+		WHERE 1 = 1		
+		  AND DEL_YN = 'N'
+		<if test='searchopt == "pu_subject" ' >
+		    AND faq_title like concat('%',#{searchword},'%')
+		</if>
+		
+	
+	</select>
+	
+	
+	<select id="selectFaqDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		SELECT  a.faq_id
+			 ,  a.faq_title
+			 ,  a.faq_contents	 
+			 ,  a.faq_order
+			 ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			 ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			 ,  a.create_id
+			 ,  a.modify_id			  	
+	 	  FROM  PTL_FAQ a 
+		 WHERE  1=1
+		 AND a.DEL_YN = 'N' 
+		 AND a.faq_id=  #{faq_id, jdbcType=INTEGER}
+	</select>	
+	
+	<select id="selectFaqSeq" resultType="integer">
+		SELECT IFNULL(MAX(FAQ_ID),0)+1 FROM PTL_FAQ
+	</select>
+	
+	<insert id="insertFaqMng" parameterType="java.util.Map">
+		INSERT INTO PTL_FAQ (
+			  FAQ_ID
+			, FAQ_TITLE
+			, FAQ_CONTENTS
+			, FAQ_ORDER	
+			, DEL_YN
+			, CREATE_DTTM
+			, CREATE_ID
+		) VALUES (
+			   #{faq_id}
+			,  #{faq_title, jdbcType = VARCHAR}
+			,  #{faq_contents, jdbcType = VARCHAR}
+			,  #{faq_order, jdbcType = VARCHAR}
+			,  'N'			
+			,  now()
+			,  #{create_id, jdbcType = VARCHAR}
+		)
+	</insert>
+	
+		<update id="updateFaqMng" parameterType="java.util.Map">
+		UPDATE PTL_FAQ SET 
+			  FAQ_TITLE = #{faq_title, jdbcType = VARCHAR}
+			, FAQ_CONTENTS = #{faq_contents, jdbcType = VARCHAR}	
+			, FAQ_ORDER = #{faq_order, jdbcType = VARCHAR}								
+			, MODIFY_DTTM = now()
+			, MODIFY_ID =  #{modify_id, jdbcType = VARCHAR}	
+		WHERE 1 = 1 
+			AND FAQ_ID =  #{faq_id, jdbcType=INTEGER}
+	</update>
+	
+	
+	
+	
+	<delete id="deleteFaq" parameterType="java.util.Map">
+		UPDATE   PTL_FAQ SET 
+		     DEL_YN = 'Y'
+		WHERE FAQ_ID = #{faq_id, jdbcType=INTEGER}
+	</delete>
+	
+</mapper>

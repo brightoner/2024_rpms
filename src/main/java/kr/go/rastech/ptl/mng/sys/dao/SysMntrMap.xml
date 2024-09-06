@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.sys.dao.SysMntrDao">
+
+<insert id="insertSysMntr" parameterType="sysMntrVo">
+ INSERT INTO 
+        PTL_SYS_MNTR  /* 시스템모니터링 */ 
+        ( 
+          MNTR_SEQ
+        , MNTR_DT
+        , MNTR_GBN
+        , MNTR_URL
+        , NCMIK_CNT
+        , EML_CNT
+        , SMS_CNT
+        , ERR_YN
+        , ERR_DESC
+        , ERR_PRC_YN
+        , ERR_PRC_DESC
+        , MODIFY_DTTM
+        , MODIFY_ID
+        , CREATE_DTTM
+        , CREATE_ID
+     ) 
+ VALUES 
+     (  
+          (SELECT NVL(MAX(MNTR_SEQ),0) + 1
+     	     FROM PTL_SYS_MNTR
+     	  )  /* 모니터링순번 */ 
+        , TO_CHAR(SYSDATE,'YYYYMMDD')    /* 모니터링일자 */ 
+        , #{mntr_gbn, jdbcType=VARCHAR}
+        , #{mntr_url, jdbcType=VARCHAR}
+        , #{ncmik_cnt, jdbcType = VARCHAR}    /* 신규사용자건 */ 
+        , #{eml_cnt, jdbcType = VARCHAR}    /* 이메일발송건 */ 
+        , #{sms_cnt, jdbcType = VARCHAR}    /* sms발송건 */ 
+        , NVL(#{err_yn, jdbcType=VARCHAR},'N')         /* 에러여부 */ 
+        , #{err_desc, jdbcType=VARCHAR}      /* 에러내용 */ 
+        , ( CASE WHEN NVL(#{err_yn, jdbcType=VARCHAR},'N') = 'Y' THEN 'N' ELSE 'Y' END )  /* 에러처리여부 */ 
+        , #{err_prc_desc, jdbcType=VARCHAR}
+        , SYSDATE    /* 수정일시 */ 
+        , #{modify_id, jdbcType = VARCHAR}    /* 수정자 */ 
+        , SYSDATE    /* 생성일자 */ 
+        , #{create_id, jdbcType = VARCHAR}    /* 생성자 */ 
+     ) 
+</insert>
+
+<select id="selectSysMntrList" resultType="sysMntrVo" parameterType="sysMntrVo">
+ SELECT 
+          a.MNTR_SEQ as mntr_seq    /* 모니터링순번 */ 
+        , TO_CHAR(TO_DATE(MNTR_DT),'YYYY-MM-DD') as mntr_dt   /* 모니터링일자 */ 
+        , a.MNTR_GBN as mntr_gbn
+        , b.CD_NM as mntr_gbn_nm
+        , a.MNTR_URL as mntr_url
+        , a.NCMIK_CNT as ncmik_cnt   /* 사용자건 */ 
+        , a.EML_CNT as eml_cnt   /* 이메일발송건 */ 
+        , a.SMS_CNT as sms_cnt   /* SMS발송건 */ 
+        , CASE WHEN a.ERR_YN = 'Y' THEN '발생' ELSE '정상' END as err_yn   /* 에러여부 */ 
+        <if test="mntr_seq != null and mntr_seq != ''">
+        , a.ERR_DESC  as err_desc    /* 에러내용 */ 
+        </if>
+        , '' as err_desc    /* 에러내용 */ 
+        , ERR_PRC_DESC as err_prc_desc
+        , CASE WHEN a.ERR_PRC_YN = 'Y' THEN '처리' ELSE '미처리' END  as err_prc_yn   /* 에러처리여부 */ 
+        , a.CREATE_DTTM as create_dttm
+    FROM PTL_SYS_MNTR a /* 시스템모니터링 */ 
+       , PTL_CD_MNG b
+ WHERE 1=1 
+   AND a.MNTR_GBN = b.CD
+   AND b.UP_CD = 'SYS_CD'
+ 	<if test="mntr_seq != null and mntr_seq != ''">
+ 		AND MNTR_SEQ = #{mntr_seq} 
+ 	</if>
+ 	<if test="mntr_dt != null and mntr_dt != ''">
+ 		AND MNTR_DT = #{mntr_dt} 
+ 	</if>
+ 	AND a.CREATE_DTTM > SYSDATE - 14
+    ORDER BY MNTR_SEQ DESC 
+</select>
+
+<update id="updateSysMntr" parameterType="sysMntrVo">
+  UPDATE 
+        PTL_SYS_MNTR  /* 시스템모니터링 */ 
+     SET 
+          ERR_PRC_YN =  #{err_prc_yn}    /* 에러처리여부 */ 
+        , ERR_PRC_DESC = #{err_prc_desc}
+        , MODIFIY_DTTM =  SYSDATE    /* 수정일시 */ 
+        , MODIFIY_ID =  #{modifiy_id, jdbcType = VARCHAR}    /* 수정자 */ 
+ WHERE 1=1 
+       AND MNTR_SEQ = #{mntr_seq, jdbcType = VARCHAR} 
+</update>
+
+<select id="selectTabList" parameterType="java.util.Map" resultType="java.util.Map">
+  SELECT A.TABLE_NAME as table_name
+       , A.COMMENTS as comments 
+       , B.TABLE_GP as table_gp
+       , NVL(B.USE_YN,'N') as USE_YN
+       , B.TABLE_URL as table_url
+       , B.TABLE_WHERE as table_where
+  FROM ALL_TAB_COMMENTS A
+     , TAB_INFO  B
+ WHERE A.TABLE_NAME = B.TABLE_NAME(+)
+   AND A.OWNER='RAS_NST'
+   AND A.TABLE_TYPE = 'TABLE'
+    <if test="search_yn != null">
+   	AND B.USE_YN ='Y'
+   </if>
+ORDER BY A.TABLE_NAME
+</select>
+
+<select id="selectColList" parameterType="java.util.Map" resultType="java.util.Map">
+SELECT A.TABLE_NAME as TABLE_NAME
+         ,  A.COLUMN_NAME as COLUMN_NAME
+         ,  A.COMMENTS as COMMENTS
+         ,  NVL(B.CONTENT_YN,'N') AS CONTENT_YN
+         ,  NVL(B.PK_YN ,'N') AS PK_YN
+         ,  NVL(B.TITLE_YN ,'N') AS TITLE_YN
+  FROM ALL_COL_COMMENTS A
+       , COL_INFO B
+ WHERE A.TABLE_NAME = B.TABLE_NAME(+)
+   AND A.COLUMN_NAME = B.COLUMN_NAME(+)
+   AND A.OWNER='RAS_NST'
+   <if test="table_name != null and table_name != '' ">
+      AND A.TABLE_NAME = #{table_name}
+   </if>
+</select>
+
+<delete id="deleteColInfo" parameterType="java.util.Map">
+  DELETE  
+    FROM COL_INFO  /* 테이블정보 */ 
+ WHERE 1=1 
+   AND TABLE_NAME = #{table_name, jdbcType = VARCHAR} 
+</delete>
+
+<insert id="insertTabInfo" parameterType="java.util.Map">
+ MERGE INTO  
+        TAB_INFO a  /* 테이블정보 */ 
+       USING ( 
+             SELECT 
+                   #{table_name} as TABLE_NAME    /* 테이블명 */ 
+                  , #{table_gp} as TABLE_GP    /* 테이블그룹 */ 
+                  , NVL(#{use_yn},'N') as USE_YN    /* 사용여부 */ 
+                  , #{table_url} as TABLE_URL
+                  , #{table_where} as TABLE_WHERE
+               FROM DUAL) b 
+           ON ( 
+                 a.TABLE_NAME = b.TABLE_NAME 
+            ) 
+ WHEN MATCHED THEN  
+            UPDATE SET  
+                   a.TABLE_GP = b.TABLE_GP
+                 , a.USE_YN = b.USE_YN
+                 , a.TABLE_URL = b.TABLE_URL
+                 , a.TABLE_WHERE = b.TABLE_WHERE
+  WHEN NOT MATCHED THEN   
+           INSERT VALUES   
+                       (  
+                      b.TABLE_NAME
+                     , b.TABLE_GP
+                     , b.USE_YN
+                     , b.TABLE_URL
+                     , b.TABLE_WHERE
+                     )  
+
+
+</insert>
+
+<insert id="insertColInfo" parameterType="java.util.Map">
+ INSERT INTO 
+        COL_INFO  /* 테이블정보 */ 
+        ( 
+          TABLE_NAME
+        , COLUMN_NAME
+        , CONTENT_YN
+        , PK_YN
+        , TITLE_YN
+     ) 
+ VALUES 
+     ( 
+          #{table_name, jdbcType = VARCHAR}    /* 메뉴id */ 
+        , #{column_name, jdbcType = VARCHAR}    /* 컬럼명 */ 
+        , #{content_yn, jdbcType = VARCHAR}    /* 컨텐츠여부 */ 
+        , #{pk_yn, jdbcType = VARCHAR}    /* pk여부 */ 
+        , NVL(#{title_yn,jdbcType=VARCHAR},'N')
+     )
+</insert>
+
+<select id="selectColInfo" parameterType="java.util.Map" resultType="java.util.Map">
+     SELECT A.TABLE_NAME as TABLE_NAME
+         ,  A.COLUMN_NAME as COLUMN_NAME
+         ,  A.CONTENT_YN AS CONTENT_YN
+         ,  A.PK_YN AS PK_YN
+         ,  CASE WHEN A.TITLE_YN ='Y' THEN 1 
+                 WHEN A.TITLE_YN ='N' THEN 2 ELSE 0 END 
+  FROM  COL_INFO A
+ WHERE 1 = 1
+   AND A.TABLE_NAME = #{TABLE_NAME, jdbcType = VARCHAR}
+ORDER BY CASE WHEN A.TITLE_YN ='Y' THEN 1 
+              WHEN A.TITLE_YN ='N' THEN 2 ELSE 0 END 
+</select>
+
+
+<select id="selectKeyWord" parameterType="java.util.Map" resultType="java.util.Map">
+ SELECT 
+          KEYWORD_SEQ as keyword_seq    /* 키워드순번 */ 
+        , KEYWORD_NM as keyword_nm   /* 키워드명 */ 
+        , HIT as hit   /* 사용횟수 */ 
+    FROM KEYWORD_INFO  /* 키워드정보 */ 
+ WHERE 1=1 
+  <if test="keyword_nm != null and keyword_nm != ''">
+ 	 AND KEYWORD_NM = #{keyword_nm} 
+  </if>
+  <if test="keyword_seq != null and keyword_seq != ''">
+  	AND KEYWORD_SEQ = #{keyword_seq} 
+  </if>
+   
+  
+    ORDER BY 1 
+
+</select>
+
+<insert id="insertKeyWord" parameterType="java.util.Map" >
+ MERGE INTO  
+        KEYWORD_INFO a  /* 키워드정보 */ 
+       USING ( 
+             SELECT 
+                      #{keyword_seq} as KEYWORD_SEQ    /* 키워드순번 */ 
+                     , #{keyword_nm} as KEYWORD_NM    /* 키워드명 */ 
+                     , 1 as HIT    /* 사용횟수 */ 
+               FROM DUAL) b 
+           ON ( 
+            a.KEYWORD_NM = b.KEYWORD_NM 
+            ) 
+ WHEN MATCHED THEN  
+            UPDATE SET  
+                      a.HIT = a.HIT +1
+  WHEN NOT MATCHED THEN   
+           INSERT VALUES   
+                       (  
+                       b.KEYWORD_SEQ
+                     , b.KEYWORD_NM
+                     , b.HIT
+                        )  
+
+</insert>
+
+<insert id="insertKeyWordTab" parameterType="java.util.Map" >
+ INSERT INTO 
+        KEYWORD_TAB_INFO  /* 키워드테이블정보 */ 
+        ( 
+        KEYWORD_SEQ
+        , KEYWORD_TAB_SEQ
+        , TABLE_NAME
+        , TABLE_SEQ
+        , TABLE_TITLE
+     ) 
+ VALUES 
+     ( 
+          #{keyword_seq}    /* 키워드순번 */ 
+        , (SELECT NVL(MAX(KEYWORD_TAB_SEQ),0) + 1 AS keyword_tab_seq
+  		    FROM KEYWORD_TAB_INFO 
+  		   WHERE KEYWORD_SEQ = #{keyword_seq} 
+  		   )   /* 키워드상세순번 */ 
+        , #{table_name}    /* 테이블명 */ 
+        , #{table_seq}    /* 테이블순번 */ 
+        , #{table_title}
+     ) 
+</insert>
+
+<select id="selectKeywordSeq" resultType="int">
+SELECT NVL(MAX(KEYWORD_SEQ),0) + 1 AS keyword_seq
+  FROM KEYWORD_INFO
+</select>
+
+
+
+<insert id="insertKeyWordMng" parameterType="java.util.Map">
+ MERGE INTO  
+        KEYWORD_MNG a  /*  */ 
+       USING ( 
+             SELECT 
+                       #{keyword_seq} as KEYWORD_SEQ    /* 키워드순번 */ 
+                     , #{table_name} as TABLE_NAME    /* 테이블명 */ 
+                     , NVL(TO_DATE(#{save_date},'YYYYMMDDHH24MISS'),SYSDATE) as SAVE_DATE    /* 검색순번 */ 
+               FROM DUAL) b 
+           ON ( 
+               a.KEYWORD_SEQ = b.KEYWORD_SEQ 
+           AND a.TABLE_NAME = b.TABLE_NAME 
+            ) 
+ WHEN MATCHED THEN  
+            UPDATE SET  
+                      a.SAVE_DATE = b.SAVE_DATE
+  WHEN NOT MATCHED THEN   
+           INSERT VALUES   
+                       (  
+                      b.KEYWORD_SEQ
+                     , b.TABLE_NAME
+                     , b.SAVE_DATE
+                        )  
+
+</insert>
+
+<select id="selectKeyWordTab" parameterType="java.util.Map" resultType="java.util.Map">
+     SELECT A.TABLE_NAME AS TABLE_NAME
+          , A.TABLE_GP AS TABLE_GP
+          , B.KEYWORD_SEQ AS KEYWORD_SEQ
+          , B.KEYWORD_NM AS KEYWORD_NM
+          , B.HIT AS HIT
+          , C.KEYWORD_TAB_SEQ AS KEYWORD_TAB_SEQ
+          , C.TABLE_SEQ AS TABLE_SEQ
+          , C.TABLE_TITLE AS TABLE_TITLE
+          , D.CD_NM AS TABLE_GP_NM
+          , A.TABLE_URL AS TABLE_URL
+          , A.TABLE_WHERE AS TABLE_WHERE
+   FROM TAB_INFO A 
+      , KEYWORD_INFO B
+      , KEYWORD_TAB_INFO C
+      , PTL_CD_MNG D
+  WHERE  A.TABLE_NAME = C.TABLE_NAME
+       AND B.KEYWORD_SEQ = C.KEYWORD_SEQ
+       AND A.TABLE_GP = D.CD
+       AND B.KEYWORD_NM = #{keyword_nm}
+       AND D.UP_CD = 'TB_GP'
+       AND A.USE_YN ='Y'
+</select>
+
+<update id="updateKeyWordMng" parameterType="java.util.Map" >
+  UPDATE 
+        KEYWORD_INFO  /* 키워드정보 */ 
+ SET 
+       HIT =  HIT + 1    /* 사용횟수 */ 
+ WHERE 1=1 
+   AND KEYWORD_NM = #{keyword_nm} 
+</update>
+
+<select id="selectExistTabList" parameterType="java.util.Map" resultType="java.util.Map">
+    SELECT TABLE_NAME AS TABLE_NAME
+         , TO_CHAR(TO_DATE('20160101','YYYYMMDDHH24MISS'),'YYYYMMDDHH24MISS') AS SAVE_DATE
+         , TABLE_GP AS TABLE_GP
+         , NVL(C.USE_YN,'N') as USE_YN
+         , TABLE_WHERE AS TABLE_WHERE
+      FROM TAB_INFO C
+     WHERE NOT EXISTS (SELECT NULL
+                         FROM KEYWORD_INFO A
+                            , KEYWORD_MNG B
+                      WHERE A.KEYWORD_SEQ = B.KEYWORD_SEQ
+                        AND B.TABLE_NAME = C.TABLE_NAME
+                        AND A.KEYWORD_NM = #{keyword_nm}
+                        AND USE_YN ='Y'
+                     ) 
+       AND USE_YN ='Y'
+     UNION ALL  
+     SELECT B.TABLE_NAME AS TABLE_NAME
+          , TO_CHAR(SAVE_DATE,'YYYYMMDDHH24MISS') AS SAVE_DATE
+          , TABLE_GP AS TABLE_GP
+          , NVL(C.USE_YN,'N') as USE_YN
+          , TABLE_WHERE AS TABLE_WHERE
+        FROM KEYWORD_INFO A
+               , KEYWORD_MNG B
+               , TAB_INFO C
+      WHERE A.KEYWORD_SEQ = B.KEYWORD_SEQ
+        AND B.TABLE_NAME = C.TABLE_NAME
+        AND A.KEYWORD_NM = #{keyword_nm}
+        AND USE_YN = 'Y'
+</select>
+
+<select id="selectListSch" resultType="sysMntrVo" parameterType="sysMntrVo">
+         SELECT  SCH_GB as sch_gb
+               , TO_CHAR(TO_DATE(SCH_DT,'YYYY/MM/DD'),'YYYY/MM/DD') AS sch_dt
+               , SUBSTR(SCH_TIME,0,2) as sch_h_time
+               , SUBSTR(SCH_TIME,3,2) as sch_m_time
+               , REF_VAL1  as  sch_gb_nm
+           FROM TASK_SCH A
+              , PTL_CD_MNG B
+          WHERE A.SCH_GB = B.CD
+              AND B.UP_CD = 'SYS_CD'
+              <if test="sch_gb != null and sch_gb != '' " >
+               AND SCH_GB = #{sch_gb}
+              </if>
+              <!-- AND SCH_DT >  -->
+       ORDER BY CD_ORD
+</select>
+
+<update id="saveSch" parameterType="sysMntrVo">
+  UPDATE 
+        TASK_SCH  /* 시스템모니터링 */ 
+     SET 
+          SCH_TIME =  #{sch_time}    /* 에러처리여부 */ 
+ WHERE 1=1 
+       AND SCH_GB = #{sch_gb} 
+</update>
+
+</mapper>

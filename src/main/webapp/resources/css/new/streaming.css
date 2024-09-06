@@ -1,0 +1,721 @@
+@charset "UTF-8";
+
+ /* 스트리밍 , 채팅 페이지 레이아웃 설정 str  */
+.live-container {
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 30px;
+    align-items: center;
+}
+
+/* 왼쪽 영역 */
+.live-left {
+    width: 1000px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 왼쪽 위 영역 */
+.live-left-top {
+	background-color: #f2f2f2;
+	height: 562.5px;
+}
+
+.live-left-top iframe {
+	height: 562.5px;
+}
+
+/* 왼쪽 아래 영역 */
+   .live-left-bottom .card-live-body {
+     min-height: 100px;
+     grid-template-columns: 50px auto 350px;
+     align-items: center;
+   }
+
+.set-btn {
+    display: grid;
+    justify-content: center;
+    grid-template-columns: 70px 90px 90px 70px;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.live-left-bottom .set-btn a {
+    margin: 5px 0;
+}
+
+/* 오른쪽 영역 */
+/*.live-right {
+   width: 33.33%;
+   background-color: #dcdcdc;
+}
+/* 
+    반응형 스타일링
+    @media (max-width: 768px) {
+      .live-container {
+        flex-direction: column; 수직 방향으로 배치
+      }
+
+      .live-left, .live-right {
+        width: 100%;
+      }
+    }
+ *//* 스트리밍 , 채팅 페이지 레이아웃 설정 end   */
+
+
+/* 채팅방 레이아웃 str   */
+.stream-chat-container {
+	max-width: 300px;
+	height: auto;
+	margin: 0 auto;
+	background-color: #fff;
+	border-radius: 10px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	border: 1px solid rgba(0,0,0,0.1);
+}
+
+.stream-chat-header {
+	height: 40px;
+	background-color: #F97E15;
+	padding: 12px;
+	color: #fff;
+	font-weight: bold; 
+	text-align: left;
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	position: relative;
+}
+
+.stream-chat-header-title {
+	padding: 12px;
+	color: #fff;
+	font-weight: bold; 
+	text-align: left;
+}
+.icons-container {
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
+}
+
+.icons-container i {
+	font-size: 19px; /* 아이콘의 크기를 20픽셀로 설정 */
+	color: #fff; /* 아이콘의 색상을 검정색으로 설정 */
+	margin-left: 5px; /* 아이콘 왼쪽 여백을 5픽셀로 설정 */
+}
+
+.stream-chat-messages {
+	/* max-height: 600px; */
+	height: 620px;
+	overflow-y: scroll;
+	padding: 10px;
+}
+
+.stream-message {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 5px;
+	font-size: 
+}
+
+.stream-message-content {
+	width: 100%;	
+}
+
+.stream-img-message-content {
+	border-radius: 10px;
+	padding: 5px;
+	max-width: 70%;
+	position: relative;
+}
+
+.stream-message-item-wrapper {
+/* 	position: absolute;
+	bottom: -20px;
+	left: 50%;
+	transform: translateX(-50%);
+ */}
+
+.stream-sender-info {
+	display: flex;
+	align-items: center;
+}
+
+.stream-sender-name {
+	margin-right: 5px;
+	color: #314873;
+}
+
+.stream-message-time {
+	color: #999;
+	font-size: 12px;
+}
+
+.stream-message-text {
+	color: #000;
+    background-color: #f2f2f2;
+    border-radius: 10px;
+    padding: 8px;
+    margin: 4px 10px 8px;
+    display: inline-block;
+    /* max-width: 90%; */
+    position: relative;
+    /* left: 5px; */
+/*     overflow: hidden;
+ */    word-break: break-all;
+	/* text-align: center; */
+}
+
+.stream-message-item {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1.2;
+}
+/*  내가 쓴건 오른쪽에 표시되도록  css  str */
+.stream-own-message {
+	flex-direction: row-reverse;
+}
+
+.stream-own-message .stream-message-content {
+	background-color: #DCF8C6;
+}
+
+.stream-own-message .stream-sender-info {
+	justify-content: flex-end;
+}
+
+.stream-own-message .stream-ender-name {
+	margin-left: 5px;
+	margin-right: 0;
+}
+
+.stream-own-message .stream-message-time {
+	order: -1;
+}
+/*  내가 쓴건 오른쪽에 표시되도록  css  end */
+
+/*  별풍선 빵빠레 이미지 str  */
+.stream-img-message {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 25px;
+}
+
+.stream-img-message .stream-message-content {
+	background-color: #DCF8C6;
+}
+
+.stream-img-message .stream-sender-info {
+	justify-content: flex-end;
+}
+
+.stream-img-message .stream-ender-name {
+	margin-left: 5px;
+	margin-right: 0;
+}
+
+.stream-img-message .stream-message-time {
+	order: -1;
+}
+/*  별풍선 빵빠레 이미지 end */
+.stream-chat-input {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 5px;
+}
+
+.stream-chat-input input {
+	flex: 1;
+	height: 40px !important;
+	padding: 8px;
+	border-radius: 5px !important;
+	border: 1px solid #ccc;
+}
+
+.stream-chat-input button, .stream-chat-input a.btn {
+	width: 80px;
+	height: 40px;
+	border-radius: 5px;
+	background-color: #fff;
+	color: #5e5e5e;
+	border: 1px solid #dbdbdb;
+	cursor: pointer;
+	margin-left: 5px;
+	font-size: 1rem;
+}
+
+.stream-chat-input button:hover,
+.stream-chat-input a.btn:hover {
+	color: #fff;
+	border-color: #ff9813;
+	background-color: #ff9813;
+}
+
+/* 채팅방 레이아웃 end   */
+
+/* 채팅 사용자 목록 str  */
+.userList {
+	display: none;
+	position: absolute;
+	overflow-y: scroll;
+	height: 450px;
+	width: 100%;
+	top: 40px;
+	right: 0;
+	border: 1px solid #ddd;
+	padding: 3px;
+	background: #fff;
+	z-index: 2;
+}
+
+.chatTitle {
+	box-sizing: border-box;
+	height: 30px !important;
+	margin-top: 5px;
+	padding: 8px 14px 0;
+	font-size: 12px;
+	font-weight: bold;
+	border: none !important;
+	color: black;
+	text-align: left;
+}
+
+.userInfo {
+	position: relative;
+	height: 25px;
+}
+
+.userInfo > a {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	padding: 0 14px;
+	transition: all 0.3s cubic-bezier(0.56, 0.12, 0.12, 0.98);
+	font-size:12px;
+}
+
+.stream-chat-userList {
+    border: 1px solid transparent;
+	border-color : #314873;
+	height: 40px;
+	background-color: #314873;
+	padding: 10px;
+	color: #fff;
+	/* font-weight: bold; */
+	text-align: left;
+	position: relative;	
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.userList-layer2{
+    display: none;
+    position: absolute;
+    max-height: 300px;
+    width: 100%;
+ 	top: 25px;
+    border: 1px solid #ddd;
+    padding: 3px;
+    background: #fff;
+    z-index: 2;
+}
+
+.chatTitle-layer2 {
+	box-sizing: border-box;
+	height: 30px !important;
+	margin-top: 5px;
+	padding: 8px 14px 0;
+	font-size: 12px;
+	font-weight: bold;
+	border: none !important;
+	color: black;
+	text-align: left;
+}
+
+.userInfo-layer2 {
+	position: relative;
+	height: 25px;
+    border: 1px solid #dbdbdb;
+    margin-bottom: 2px;
+    margin-top: 2px;
+}
+
+.userInfo-layer2 > a {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	padding: 0 14px;
+	transition: all 0.3s cubic-bezier(0.56, 0.12, 0.12, 0.98);
+	font-size:12px;
+}
+
+.stream-chat-userList-layer2 {
+    border: 1px solid transparent;
+	border-color : #306090;
+	height: 40px;
+	background-color: #306090;
+	padding: 10px;
+	color: #fff;
+	/* font-weight: bold; */
+	text-align: left;
+	position: relative;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+
+.userList-blackList {
+	display: none;
+	position: absolute;
+	width: 450px;
+	top: 40px;
+	right: -30px;
+	border: 1px solid #ddd;
+	padding: 3px;
+	background: #fff;
+	z-index: 2;
+}
+
+
+.userList-blackList-main {
+	left: -10px;
+}
+
+.chatTitle-blackList {
+	box-sizing: border-box;
+	height: 30px !important;
+	margin-top: 5px;
+	padding: 8px 14px 0;
+	font-size: 12px;
+	font-weight: bold;
+	border: none !important;
+	color: black;
+	text-align: left;
+}
+
+.userInfo-blackList {
+	position: relative;
+	height: 25px;
+}
+
+.userInfo-blackList > a {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	padding: 0 14px;
+	transition: all 0.3s cubic-bezier(0.56, 0.12, 0.12, 0.98);
+	font-size:12px;
+}
+
+.stream-chat-userList-blackList {
+    border: 1px solid transparent;
+	border-color : #314873;
+	height: 40px;
+	background-color: #314873;
+	padding: 10px;
+	color: #fff;
+	/* font-weight: bold; */
+	text-align: left;
+	position: relative;	
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+/* 채팅 사용자 목록 end  */
+
+/* 채팅 유저 새로고침 버튼 스타일 , 채팅 유저 목록 닫기 버튼 str*/
+.refresh-button, .chatuser-close-button {
+	width: 24px;
+	height: 24px;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	border-radius: 50%;
+	padding: 4px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-left: 5px;
+	 transition: opacity 0.3s ease-in-out;
+}
+
+.button-group {
+	display: flex;
+	align-items: center;
+}
+
+.refresh-button:hover, .chatuser-close-button:hover  {
+	background-color: #f2f2f2;
+    opacity: 0.7;
+}
+
+.refresh-button i {
+	font-size: 12px;
+    stroke-width: 1.5px;
+    color: #314873;
+}
+
+
+.chatuser-close-button i {
+	font-size: 12px;
+    stroke-width: 1.5px;
+    color: #314873;
+}
+
+
+/* 채팅 유저 새로고침 버튼 스타일 , 채팅 유저 목록 닫기 버튼 end*/
+
+ 
+@media screen and (max-width: 600px) {
+	.stream-chat-container {
+		max-width: 90%;
+	}
+}
+
+
+/* 방송설정쪽 화면 다듬기 str */
+.mng .live-container {
+	grid-template-columns: auto 1fr;
+}
+/* 
+.mng .live-left {
+    width: 800px;
+    height: 449px;
+    background-color: #f9f9f9;
+    position: relative;
+}
+ */
+.mng .live-container .player-area {
+	 width: 100%;
+    height: 100%;
+    background-color: #dddddd;
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+}
+
+.mng .stream-chat-messages {
+	height: 470px;
+}
+/* 방송설정쪽 화면 다듬기 end */
+
+#btnRefresh {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: #fff;
+    border: 0;
+}
+
+#btnRefresh i {
+    font-size: 1.6rem;
+}
+
+#btnRefresh span {
+    margin: -5px 0 0 2px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.user {
+    width: 1000px;
+    margin: 0 50px 0 0;
+    display: grid;
+    justify-content: end;
+    grid-template-columns: auto auto;
+    padding: 15px 0;
+}
+
+.user p {
+    margin: 0 0 0 30px;
+    font-size: 1.1rem;
+    color: #888;
+}
+
+.user i {
+    color: #f97e15;
+    margin: 0 5px 0 0;
+}
+
+.user span {
+    font-weight: 500;
+    color: #111;
+}
+
+.user .use_item {
+    margin: 0 10px 0 30px;
+    line-height: 40px;
+    color: #314873;
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.info-live {
+    width: 980px;
+    margin: 0 50px 0 0;
+    display: grid;
+    justify-content: end;
+    grid-template-columns: auto auto;
+    padding: 15px 0;
+}
+
+.info-live p {
+    margin: 0 0 0 30px;
+    font-size: 1.1rem;
+    color: #888;
+}
+
+.info-live i {
+    color: #f97e15;
+    margin: 0 5px 0 0;
+}
+
+.info-live span {
+    font-weight: 500;
+    color: #111;
+}
+/* RTMP 설정 str */
+div#bcsDiv {
+    display: grid;
+    grid-template-columns: 1000px auto;
+    gap: 30px;
+}
+
+div#bcsDiv table {
+    height: fit-content;
+    margin: 0;
+}
+
+#rtmp {
+    background-color: #f9f9f9;
+    padding: 15px;
+	margin: -20px 0 0;    
+}
+
+#rtmp h4 {
+    color: #111;
+    font-size: 1.4rem;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+#rtmp .inline-form input {
+	margin: 0 !important;
+	width: 100% !important;
+	padding-right: 35px;
+}
+
+#rtmp .inline-form span {
+    position: absolute;
+    right: 4px;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+}
+
+#rtmp span, #rtmp p {
+	word-break: break-all;
+	color: #314873;
+}
+
+#rtmp span {
+	font-size: 1.1rem;
+	color: #666;
+}
+
+div#bcsDiv ~ .flex_box {
+	width: 1000px;
+    position: relative;
+    top: -100px;
+    right: -15px;
+}
+/* RTMP 설정 end */
+
+/* 방송 중이지 않을 때 */
+.not-streaming {
+    height: 100%;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    background-color: #000;
+    background: url('../../images/new/bg_not_streaming.png') no-repeat center/cover;
+}
+
+.not-streaming p {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.6rem;
+}
+
+/* 방송대기 */
+#cover_wait {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    background-color: #f9f9f9;
+    background: url('../../images/new/bg_wait.png') no-repeat center/cover;
+    /* border: 1px solid #eee; */
+    display: none;
+}
+
+#cover_wait p {
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin-top: 240px;
+    text-align: center;
+}
+
+span#cover_text {
+    line-height: 40px;
+}
+
+/* vod 동영상 영역 조정 */
+.live-container.vod-only {
+	display: block;
+}
+
+.vod-only .live-left {
+    width: 100%;
+}
+
+.vod-only .live-left-top, .vod-only .live-left-top iframe {
+    height: 751px;
+}
+
+.vod-only .info-live {
+    width: 100%;
+}
+
+/* .vod-only .live-left-bottom .card-live-body {
+    grid-template-columns: 50px auto 280px;
+} */
+
+/* .vod-only .set-btn {
+    grid-template-columns: 70px 90px 90px;
+}
+ */
+.mng .vod-only .live-left-top, .mng .vod-only .live-left-top iframe {
+    height: 627px;
+}
+
+input#vodUploadFile {
+    cursor: pointer;
+}

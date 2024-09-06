@@ -1,0 +1,34 @@
+@charset "utf-8";
+/* @import url('/sub.css'); */
+html, body {margin: 0;}
+
+a.print-preview {
+    display: none;
+}
+
+header , fieldset, section, .mlocation , .ssub1_submenu, #display_setting, #tab_area, .aside, .sdt_select_btn_1, .sdt_select_btn_2 ,footer {
+    display: none;
+    width:0px;
+    height:0px;	
+    margin: 0;
+    padding:0px;
+}
+#schCon {width:95%;}
+.container {
+ width:750px;
+ min-width:155mm;
+ top:-80px;
+ word-break:normal;
+        margin: 0 0 0 0;
+        padding:0 0 0 0; /*-10px*/
+        border: initial;
+        border-radius: initial;
+        width: initial;
+        min-height: initial;
+        box-shadow: initial;
+        background: initial;
+        page-break-after: always;
+}
+
+
+/*  max-width: 767px  */	

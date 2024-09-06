@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+
+
+<!-- 개발  -->
+
+ <Resource name="jdbc/platform"
+            auth="Container"
+            type="javax.sql.DataSource"
+            driverClassName="org.mariadb.jdbc.Driver"
+            factory="org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory"
+            url="jdbc:mariadb://192.168.1.121:3306/platform"
+            username="platform"
+            password="rasqlalf"/>
+
+
+<!-- 개발2 -->    
+  
+<!-- <Resource name="jdbc/platform"
+            auth="Container"
+            type="javax.sql.DataSource"
+            driverClassName="org.mariadb.jdbc.Driver"
+            factory="org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory"
+            url="jdbc:mariadb://61.85.85.227:3306/platform"
+            username="platform"
+            password="rasqlalf"/>    -->
+
+                     
+
+<!-- 로컬  -->
+<!-- 
+<Resource name="jdbc/platform"
+            auth="Container"
+            type="javax.sql.DataSource"
+            driverClassName="org.mariadb.jdbc.Driver"
+            factory="org.apache.tomcat.dbcp.dbcp2.BasicDataSourceFactory"
+            url="jdbc:mariadb://localhost:3306/platform"
+            username="platform"
+            password="rasqlalf"/>
+-->
+
+            
+</Context>
+<!-- 자바 7버전  factory="org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory" -->
+<!-- 자바 8버전  factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" -->

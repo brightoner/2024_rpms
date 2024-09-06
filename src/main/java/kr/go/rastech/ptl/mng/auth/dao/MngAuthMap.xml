@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.auth.dao.MngAuthDao">
+
+  <!-- URL 권한  관리 - URL 권한 저장 -->
+<insert id="insertUrlAuth" parameterType="mngAuthVo">
+   INSERT INTO 
+        PTL_URL_MNGT  /* URL관리 */ 
+        ( 
+          URL_SEQ
+        , MENU_ID
+        , AUTH_GBN
+        , URL
+        , URL_DESC
+        , MODIFY_DTTM
+        , modify_id
+        , CREATE_DTTM
+        , CREATE_ID
+     ) 
+ VALUES 
+     ( 
+     	  (select seq from (SELECT ifnull(MAX(URL_SEQ),0) + 1 as seq
+     	     FROM PTL_URL_MNGT a ) a
+     	  ) 	/*url순번*/
+        , #{menu_id, jdbcType = VARCHAR}    /* 메뉴id */ 
+        , #{auth_gbn, jdbcType = VARCHAR}    /* 권한구분 */ 
+        , #{url, jdbcType = VARCHAR}    /* url경로 */ 
+        , #{url_desc, jdbcType = VARCHAR}    /* url설명 */ 
+        , now()    /* 수정일시 */ 
+        , #{modify_id, jdbcType = VARCHAR}    /* 수정자 */ 
+        , now()    /* 등록일시 */ 
+        , #{create_id, jdbcType = VARCHAR}    /* 등록자 */ 
+     ) 
+</insert>
+
+<select id="readUrlAuth" parameterType="mngAuthVo" resultType="mngAuthVo">
+ SELECT 
+          a.URL_SEQ as url_seq    /* URL순번 */ 
+        , a.MENU_ID as menu_id   /* 메뉴ID */ 
+        , b.MENU_NM as menu_nm
+        , a.AUTH_GBN as auth_gbn   /* 권한구분 */ 
+        , a.URL as url   /* URL경로 */ 
+        , a.URL_DESC as url_desc   /* URL설명 */ 
+        , a.MODIFY_DTTM as MODIFY_DTTM   /* 수정일시 */ 
+        , a.modify_id as modify_id   /* 수정자 */ 
+        , a.CREATE_DTTM as create_dttm   /* 등록일시 */ 
+        , a.CREATE_ID as create_id   /* 등록자 */ 
+    FROM PTL_URL_MNGT  a   /* URL관리 */ 
+       , PTL_MENU_MNGT b
+ WHERE a.MENU_ID= B.MENU_ID
+ 	<if test="menu_id != null and menu_id != ''">
+ 		AND a.MENU_ID = #{menu_id} 
+ 	</if>
+ 	<if test="url_seq != null and url_seq !=''">
+ 		AND a.URL_SEQ = #{url_seq} 
+ 	</if>
+ORDER BY a.URL_SEQ   
+   
+</select>
+
+<update id="updateUrlAuth" parameterType="mngAuthVo">
+  UPDATE 
+        PTL_URL_MNGT  /* URL관리 */ 
+ SET 
+      AUTH_GBN =  #{auth_gbn, jdbcType = VARCHAR}    /* 권한구분 */ 
+    , URL =  #{url, jdbcType = VARCHAR}    /* URL경로 */ 
+    , URL_DESC =  #{url_desc, jdbcType = VARCHAR}    /* URL설명 */ 
+    , MODIFY_DTTM =  now()    /* 수정일시 */ 
+    , modify_id =  #{modify_id, jdbcType = VARCHAR}    /* 수정자 */ 
+ WHERE 1=1
+	<if test="url_seq != null and url_seq !=''">
+		AND URL_SEQ = #{url_seq, jdbcType = VARCHAR} 
+	</if>
+</update>
+
+<delete id="deleteUrlAuth" parameterType="mngAuthVo">
+	DELETE FROM PTL_URL_MNGT
+	WHERE 1=1
+	<if test="url_seq != null and url_seq != ''">
+	  	AND URL_SEQ = #{url_seq}
+	</if>
+	<if test="menu_id != null and menu_id != ''">
+	  	AND MENU_ID = #{menu_id}
+	</if>
+	 
+</delete>
+
+<select id="readMenuAuth" resultType="mngAuthVo"> 
+ SELECT 
+	    a.URL as url    /* 메뉴ID */ 
+	  , b.AUTH_GBN as auth_gbn   /* 권한구분 */ 
+	  , b.ROL_ID as rol_id             /* 권한ID */ 
+  FROM (SELECT * FROM PTL_URL_MNGT WHERE AUTH_GBN IN ('VIEW','DTLVIEW') ) a
+      LEFT OUTER JOIN  PTL_MENU_ROLT b /* 메뉴권한 */  
+  ON ( a.MENU_ID = b.MENU_ID)
+</select>
+
+</mapper>

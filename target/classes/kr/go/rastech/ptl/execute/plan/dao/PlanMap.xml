@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.execute.plan.dao.PlanDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연차과제 전체 list -->
+	<select id="selectProjPlanList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectProjPlanList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.PROJ_YEAR_ID 
+              , A.PROJ_ID
+              , A.PROJ_YEAR_GB
+              , A.PROJ_STEP_GB
+              , A.PROJ_RECPT_NO 
+              , A.PROJ_TYPE_CD 
+              , A.RND_GB
+              , A.TECH_CLS_CD1
+              , A.WEIGHT1 
+		  	  , A.TECH_CLS_CD2
+		  	  , A.WEIGHT2
+		  	  , A.TECH_CLS_CD3
+		  	  , A.WEIGHT3
+		  	  , A.SECURTY_LEVL_CD
+		      , A.PROJ_NM_KOR
+		      , A.PROJ_NM_ENG
+		      , DATE_FORMAT(A.CUR_STRTDT,'%Y-%m-%d') AS CUR_STRTDT
+		      , DATE_FORMAT(A.CUR_ENDDT,'%Y-%m-%d') AS CUR_ENDDT
+		      , A.TOT_COST
+		      , A.GOV_COST
+		      , A.CASH
+		      , A.STOCK
+		      , A.CREATE_ID
+		      , A.YEAR_FILE_GROUP
+		      , C.ANN_ID
+		  	  , C.ANN_NM
+		  	  , C.DEPT_ORG
+		  	  , C.DDCT_ORG
+		  	  , C.FILE_GROUP
+		  FROM   PTL_PROJECT_YEAR A
+	 LEFT JOIN  PTL_PROJECT B
+	 	    ON  A.PROJ_ID = B.PROJ_ID 
+	 LEFT JOIN  PTL_ANNOUNCE C
+	        ON  B.ANN_ID = C.ANN_ID
+	INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R 
+	 	 WHERE  1=1
+	 	   AND  A.DEL_YN ='N'	
+	 	   AND  B.AGMT_GB = '1'
+	 	<if test="dept_org != null and dept_org !=''">
+		  AND  C.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  C.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="proj_year != null and proj_year !=''">
+		  AND  SUBSTRING(A.CUR_STRTDT, 1, 4) = #{proj_year}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+		<if test="proj_id != null and proj_id !=''"> <!--  연차과제생성 메뉴에서 신청 과제를 선택하면 사용하는 PARAM -->
+		  AND  A.PROJ_ID = #{proj_id}
+		</if>
+     ORDER BY  A.CUR_STRTDT DESC, A.PROJ_YEAR_ID DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연차과제 전체 list count -->
+	<select id="selectProjPlanListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectProjYearListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  ptl_project_year A
+	LEFT JOIN  PTL_PROJECT B
+		   ON  A.PROJ_ID = B.PROJ_ID 
+	LEFT JOIN  PTL_ANNOUNCE C
+	       ON  B.ANN_ID = C.ANN_ID
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  B.AGMT_GB = '1'
+		<if test="dept_org != null and dept_org !=''">
+		  AND  C.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  C.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="proj_year != null and proj_year !=''">
+		  AND  SUBSTRING(A.CUR_STRTDT, 1, 4) = #{proj_year}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+		<if test="proj_id != null and proj_id !=''"><!--  연차과제생성 메뉴에서 신청 과제를 선택하면 사용하는 PARAM -->
+		  AND  A.PROJ_ID = #{proj_id}
+		</if>
+	</select>
+	
+	
+	<!-- 연차과제 상세보기 -->
+	<select id="selectProjPlanDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectProjPlanDtl */
+		SELECT A.PROJ_YEAR_ID 
+             , A.PROJ_ID
+             , A.PROJ_YEAR_GB
+             , A.PROJ_STEP_GB
+             , A.PROJ_RECPT_NO 
+             , A.PROJ_TYPE_CD 
+             , A.RND_GB
+             , A.TOT_COST 
+             , A.GOV_COST 
+             , A.CASH 
+             , A.STOCK
+             , A.TECH_CLS_CD1
+             , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD1 ) AS TECH_CLS_NM1
+             , A.WEIGHT1 
+             , A.TECH_CLS_CD2 
+             , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD2 ) AS TECH_CLS_NM2
+             , A.WEIGHT2
+		  	 , A.TECH_CLS_CD3
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD3 ) AS TECH_CLS_NM3
+		  	 , A.WEIGHT3
+		  	 , A.SECURTY_LEVL_CD
+		     , A.PROJ_NM_KOR 
+		     , A.PROJ_NM_ENG
+		     , DATE_FORMAT(A.CUR_STRTDT,'%Y-%m-%d') AS CUR_STRTDT
+		     , DATE_FORMAT(A.CUR_ENDDT,'%Y-%m-%d') AS CUR_ENDDT
+		     , A.CREATE_ID
+		     , FN_USER_KEY_INFO(A.CREATE_ID , 'NM') AS USERNAME
+		     , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		     , A.YEAR_FILE_GROUP
+		     , B.LEAD_ORG_CD
+		     , B.AGMT_GB
+		     , DATE_FORMAT(B.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+		     , (SELECT D.ORG_NM FROM PTL_ORG_MNG D WHERE D.ORG_ID = B.LEAD_ORG_CD ) AS ORG_NM
+		     , (SELECT D.ORG_CRM_NO FROM PTL_ORG_MNG D WHERE D.ORG_ID = B.LEAD_ORG_CD ) AS ORG_CRM_NO
+		     , (SELECT D.ORG_ADDRESS FROM PTL_ORG_MNG D WHERE D.ORG_ID = B.LEAD_ORG_CD ) AS ORG_ADDRESS
+		     , C.ANN_ID
+		  	 , C.DEPT_ORG
+		  	 , C.DDCT_ORG
+		  	 , C.FILE_GROUP
+		 FROM  PTL_PROJECT_YEAR A
+	LEFT JOIN  PTL_PROJECT B
+		   ON  A.PROJ_ID = B.PROJ_ID 
+	LEFT JOIN  PTL_ANNOUNCE C
+	       ON  B.ANN_ID = C.ANN_ID
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  B.AGMT_GB = '1'	
+		  AND  A.PROJ_YEAR_ID = #{proj_year_id} 
+	</select>	
+	
+	
+	<!-- 연구과제 신청 상세보기 시 실무책임자 select -->
+	<select id="selectYearRespPerson"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearRespPerson */
+		SELECT A.YEAR_RESP_ID 
+			 , A.PROJ_YEAR_ID 
+			 , A.SUB_YEAR_RESP_ID 
+			 , A.YEAR_RESP_CD 
+			 , A.YEAR_RESP_GB AS RES_GB
+			 , A.YEAR_PART_RATE
+			 , DATE_FORMAT(A.YEAR_PART_STRTDT,'%Y-%m-%d') AS  YEAR_PART_STRTDT
+			 , DATE_FORMAT(A.YEAR_PART_ENDDT,'%Y-%m-%d') AS  YEAR_PART_ENDDT
+			 , B.RESP_NM 
+			 , B.RESP_BIRTH 
+			 , B.RESP_ORG 
+			 , B.RESP_DEPT 
+			 , B.RESP_DEPT 
+			 , B.RESP_POSITION 
+			 , B.RESP_EMAIL 
+			 , B.RESP_MBTLNUM 
+		 FROM  PTL_YEAR_RESPONSIBLE_PERSON A, PTL_RESP_MNG B
+		WHERE  A.YEAR_RESP_CD = B.RESP_ID 
+		  AND  A.PROJ_YEAR_ID = #{proj_year_id}
+    ORDER BY  CASE A.YEAR_RESP_GB WHEN 'L' THEN 1
+		       					   WHEN 'R' THEN 2
+		        				   WHEN 'E' THEN 3
+		                           ELSE 4
+		       END
+	</select>
+	
+	<!-- wbs 연구자 매핑 활용 -->
+	<select id="selectWbsYearRespPerson"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectWbsYearRespPerson */
+		SELECT   A.PROJ_YEAR_ID 	
+		  	 ,  A.YEAR_RESP_CD 		
+		  	 ,  B.RESP_NM 
+		 FROM  rpms.PTL_YEAR_RESPONSIBLE_PERSON A , rpms.PTL_RESP_MNG B
+	    WHERE  A.YEAR_RESP_CD = B.RESP_ID
+		  AND  A.PROJ_YEAR_ID = #{proj_year_id}
+	 GROUP BY    A.PROJ_YEAR_ID 	
+			,  A.YEAR_RESP_CD 		
+			,  B.RESP_NM 
+	 ORDER BY  case 	A.YEAR_RESP_GB when 'L' then 1
+									   when 'R' then 2
+									   when 'E' then 3
+      	        else 4
+				end
+				
+	</select>
+	
+	<!-- 연차과제 신청 수정 -->
+	<update id="updateProjPlan" parameterType="java.util.Map">
+	/* updateProjPlan */
+		UPDATE  PTL_PROJECT_YEAR
+		   SET  PROJ_YEAR_GB = #{proj_year_gb,  jdbcType = VARCHAR}
+		      , PROJ_STEP_GB = #{proj_step_gb,  jdbcType = VARCHAR}
+			  , PROJ_TYPE_CD = #{proj_type_cd,  jdbcType = VARCHAR}
+			  , RND_GB = #{rnd_gb,  jdbcType = VARCHAR}
+			  , TECH_CLS_CD1 = #{tech_cls_cd1,  jdbcType = VARCHAR}
+			  , WEIGHT1 = #{weight1,  jdbcType = VARCHAR}
+			  , TECH_CLS_CD2 = #{tech_cls_cd2,  jdbcType = VARCHAR}
+			  , WEIGHT2 = #{weight2,  jdbcType = VARCHAR}
+			  , TECH_CLS_CD3 = #{tech_cls_cd3,  jdbcType = VARCHAR}
+			  , WEIGHT3 = #{weight3,  jdbcType = VARCHAR}
+			  , SECURTY_LEVL_CD = #{securty_levl_cd,  jdbcType = VARCHAR}
+			  , PROJ_NM_KOR = #{proj_nm_kor,  jdbcType = VARCHAR}
+			  , PROJ_NM_ENG = #{proj_nm_eng,  jdbcType = VARCHAR}
+			  , CUR_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+							       ELSE DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+						      END)
+			  , CUR_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+							      ELSE DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+						     END)
+			  , TOT_COST = #{tot_cost,  jdbcType = VARCHAR}
+			  , GOV_COST = #{gov_cost,  jdbcType = VARCHAR}
+			  , CASH = #{cash,  jdbcType = VARCHAR}
+			  , STOCK = #{stock,  jdbcType = VARCHAR}
+			  , YEAR_INFO = #{year_info,  jdbcType = VARCHAR}
+			  , MODIFY_ID = #{modify_id,  jdbcType = VARCHAR}
+			  , MODIFY_DTTM = NOW()
+		 WHERE  1=1
+		   AND  PROJ_YEAR_ID = #{proj_year_id}
+		   AND  DEL_YN = 'N'
+	</update>
+	
+	
+	
+	<!-- 연차과제 신청 삭제 시 책임자 삭제  -->
+	<delete id="deleteYearRespPerson" parameterType="java.util.Map">
+	/* deleteYearRespPerson */
+	DELETE  FROM  PTL_YEAR_RESPONSIBLE_PERSON
+		   WHERE  1=1 
+		     AND  PROJ_YEAR_ID = #{proj_year_id}
+	</delete>
+	
+	
+	<!-- 연구과제 등록시 책임자 등록 -->
+	<insert id="instYearRespPerson" parameterType="java.util.Map">
+	/* instYearRespPerson */
+		INSERT INTO PTL_YEAR_RESPONSIBLE_PERSON
+			(  YEAR_RESP_ID
+			 , PROJ_YEAR_ID
+			 , SUB_YEAR_RESP_ID
+			 , YEAR_RESP_CD
+			 , YEAR_RESP_GB
+			 , YEAR_PART_RATE
+			 , YEAR_PART_STRTDT
+			 , YEAR_PART_ENDDT
+		    ) VALUES (
+		       (SELECT CONCAT('YRRP_' , LPAD(NEXTVAL(PTL_YEAR_RESPONSIBLE_PERSON_SEQ),15,0 )) FROM DUAL)
+			 , #{proj_year_id}
+			 , #{sub_year_resp_id}
+			 , #{year_resp_cd}
+			 , #{year_resp_gb}
+			 , IFNULL(#{year_part_rate} , '0')
+			 , CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_part_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' ELSE DATE_FORMAT(STR_TO_DATE(#{year_part_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') END 
+			 , CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_part_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN ''  ELSE DATE_FORMAT(STR_TO_DATE(#{year_part_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') END 		
+		    )
+	</insert>
+	
+		
+	<!-- 연차과제  삭제 -->
+	<delete id="deleteProjPlan" parameterType="java.util.Map">
+	/* deleteProjPlan */
+		 UPDATE  PTL_PROJECT_YEAR
+		    SET  DEL_YN = 'Y'
+		  WHERE  1=1
+		    AND  DEL_YN = 'N'
+		    AND  PROJ_YEAR_ID = #{proj_year_id}
+	</delete>
+	
+	
+</mapper>

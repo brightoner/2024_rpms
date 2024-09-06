@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.exchMgmt.dao.ExchMgmtDao"> 
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+	<![CDATA[
+             ) A		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+	]]>
+ </sql>
+
+	<!-- 사용자 item 받은내역 조회 -->
+	<select id="selectExchInfoList" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		/* selectExchInfoList */
+		<include refid="getPagingSelect"></include>
+	  	 SELECT  A.EXCH_BASE_ID 
+	  	 	  ,  CONCAT( 'EX_', SUBSTRING(EXCH_BASE_ID, -7)) AS EXCH_NUM	
+			  ,  FN_USER_KEY_INFO ( A.EMPLYRKEY , 'ID') AS EXCH_USER_ID
+	 		  ,  FN_USER_KEY_INFO ( A.EMPLYRKEY , 'NM') AS EXCH_USER_NICK
+		  	  ,  A.EXCH_ITEM_CNT	
+		  	  ,  A.EXCH_ITEM_MONEY		  	   
+			  ,  (CASE WHEN A.EXCH_APPRL_GBN = 'Y' THEN '환전 완료' 
+					   WHEN A.EXCH_APPRL_GBN = 'N' THEN '환전 취소' 
+					   ELSE '환전 검토 중' END) AS EXCH_APPRL_GBN
+			  ,  A.EXCH_CANCLE_COMMENT
+			  ,  DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d %H:%i') AS CREATE_DTTM
+			  ,  A.CREATE_ID
+		   FROM  ptl_exch_base A  , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B   
+	      WHERE  1=1 
+			<if  test='startDate != null and startDate != "" and endDate != null and endDate != ""'>
+			AND  DATE_FORMAT(A.CREATE_DTTM ,'%Y-%m-%d') BETWEEN date_format(#{startDate},'%Y-%m-%d') AND date_format(#{endDate},'%Y-%m-%d')
+			</if>
+			<if test="searchword != null and searchword != ''">
+				<if test ="searchopt == 'nickNm'">
+					
+					     AND  FN_USER_KEY_INFO(A.EMPLYRKEY, 'NM') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+				</if>
+				<if test ="searchopt == 'id'">
+					    AND  FN_USER_KEY_INFO(A.EMPLYRKEY, 'ID') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+				</if>
+			
+			</if>
+			<if test="exch_apprl_gbn != null and exch_apprl_gbn != ''">	
+				<if test='exch_apprl_gbn == "Y"'>					
+				  AND A.EXCH_APPRL_GBN =  'Y'
+				</if>
+				<if test='exch_apprl_gbn == "N"'>					
+				  AND A.EXCH_APPRL_GBN = 'N'  
+				</if>
+				<if test='exch_apprl_gbn == "I"'>					
+				  AND A.EXCH_APPRL_GBN = 'I'  
+				</if>
+			</if>	
+	   ORDER BY  A.EXCH_BASE_ID DESC
+		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 사용자 item 사용내역 조회 카운트 -->
+	<select id="selectExchInfoCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectExchItemRcvCount */
+		SELECT  COUNT(*)
+		  FROM  PTL_EXCH_BASE
+		 WHERE 1= 1
+		<if test='startDate != null and startDate != "" and endDate != null and endDate != ""'>
+    	   AND  DATE_FORMAT(CREATE_DTTM ,'%Y-%m-%d') BETWEEN date_format(#{startDate},'%Y-%m-%d') AND date_format(#{endDate},'%Y-%m-%d')
+		</if>
+		<if test="searchword != null and searchword != ''">
+			<if test ="searchopt == 'nickNm'">
+			
+				     AND  FN_USER_KEY_INFO(EMPLYRKEY, 'NM') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+			</if>
+			<if test ="searchopt == 'id'">
+				    AND  FN_USER_KEY_INFO(EMPLYRKEY, 'ID') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+			</if>		
+		</if>
+		<if test="exch_apprl_gbn != null and exch_apprl_gbn != ''">	
+			<if test='exch_apprl_gbn == "Y"'>					
+			  AND EXCH_APPRL_GBN =  'Y'
+			</if>
+			<if test='exch_apprl_gbn == "N"'>					
+			  AND EXCH_APPRL_GBN = 'N'  
+			</if>
+			<if test='exch_apprl_gbn == "I"'>					
+			  AND EXCH_APPRL_GBN = 'I'  
+			</if>
+		</if>	
+	</select>
+	
+	<select id="selectExchBaseInfoDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectExchBaseInfoDtl */
+		SELECT  EXCH_BASE_ID	
+			 ,  CONCAT( 'EX_', SUBSTRING(EXCH_BASE_ID, -7)) AS EXCH_NUM  
+		     ,  BANK_NM
+		     ,  FN_USER_KEY_INFO ( EMPLYRKEY , 'ID') AS EXCH_USER_ID
+	 		 ,  FN_USER_KEY_INFO ( EMPLYRKEY , 'NM') AS EXCH_USER_NICK
+		     ,  ACCOUNT_HOLDER		
+		     ,  ACCOUNT_NUM
+		     ,  IFNULL(EXCH_ITEM_CNT , 0) as EXCH_ITEM_CNT
+		     ,  EXCH_ITEM_MONEY
+		     ,  EXCH_APPRL_GBN
+		     ,  ATCH_IDENTITY_IMG_ID 
+		     ,  ATCH_BANKBOOK_IMG_ID 
+		     ,  EMPLYRKEY
+		     ,  EXCH_CANCLE_COMMENT
+		     ,  date_format(create_dttm,'%Y-%m-%d') AS create_dttm
+		     ,  date_format(modify_dttm,'%Y-%m-%d') AS modify_dttm   	  		  	
+		FROM PTL_EXCH_BASE
+		WHERE 1=1		
+		  AND EXCH_BASE_ID = #{exch_base_id, jdbcType=VARCHAR}
+		  
+	</select>	
+		
+	<!-- 환전 신청 유저 item 현황 -->
+	<select id="selectUserExchSituationData" parameterType="java.util.Map" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		/* selectUserExchSituationData */						
+		SELECT sum(A.TOTAL_ITEM_CNT ) AS TOTAL_ITEM_CNT  , (sum(A.TOTAL_ITEM_CNT )  -EXCH_TOT_CNT)  AS EXCH_PSB_CNT , EXCH_GET_CNT , EXCH_REVIEW_CNT 
+			FROM (
+				SELECT  CAST(IFNULL((A.ITEM_USE_HIS), 0) AS INTEGER) AS TOTAL_ITEM_CNT
+						,  CAST(IFNULL((SELECT SUM(B.EXCH_ITEM_CNT)FROM ptl_exch_base B WHERE A.EMPLYRKEY = B.EMPLYRKEY AND B.EXCH_APPRL_GBN  IN ('Y', 'I')), 0) AS INTEGER)  AS EXCH_TOT_CNT
+						,  CAST(IFNULL((SELECT SUM(B.EXCH_ITEM_CNT) FROM ptl_exch_base B WHERE A.EMPLYRKEY = B.EMPLYRKEY AND B.EXCH_APPRL_GBN = 'Y'), 0) AS INTEGER) AS EXCH_GET_CNT
+						,  CAST(IFNULL((SELECT SUM(B.EXCH_ITEM_CNT)FROM ptl_exch_base B WHERE A.EMPLYRKEY = B.EMPLYRKEY AND B.EXCH_APPRL_GBN = 'I'), 0)  AS INTEGER) AS EXCH_REVIEW_CNT
+				  FROM  PTL_ITEM A 
+				 WHERE  A.EMPLYRKEY = #{emplyrkey}
+				   AND  A.ITEM_CHNG_HIS IN ('2')
+				)A
+	</select>
+	
+	
+	<update id="updateExchState" parameterType="java.util.Map">
+		UPDATE PTL_EXCH_BASE SET 
+	  		 EXCH_APPRL_GBN = #{exch_apprl_gbn, jdbcType = VARCHAR}		 
+		<choose>
+			<when test='exch_apprl_gbn == "N" '>
+				, EXCH_CANCLE_COMMENT = #{exch_cancle_comment, jdbcType = VARCHAR}				
+			</when>
+			<otherwise>
+				, EXCH_CANCLE_COMMENT = ''
+			</otherwise>
+		</choose>
+			, MODIFY_ID = #{modify_id, jdbcType = VARCHAR}
+			, MODIFY_DTTM = now()
+		WHERE 1 = 1 
+		  AND emplyrkey =  #{emplyrkey, jdbcType=VARCHAR}
+		  AND exch_base_id =  #{exch_base_id, jdbcType=VARCHAR}
+	</update>
+	
+	
+	
+</mapper>

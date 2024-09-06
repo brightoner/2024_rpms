@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC 
+    "-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.1//EN" 
+    "http://jakarta.apache.org/commons/dtds/validator_1_1.dtd">
+
+<form-validation>
+
+    <formset>
+		<form name="eventManageVO">
+
+			<field property="eventNm" depends="required, maxlength">
+        		<arg0 key="교육명" resource="false"/>
+        		<arg1 key="60" resource="false"/>
+				<var>
+				<var-name>maxlength</var-name>
+				<var-value>60</var-value>
+				</var>
+			</field>
+			 
+			<field property="eventCn" depends="required, maxlength">
+        		<arg0 key="교육내용" resource="false"/>
+        		<arg1 key="1000" resource="false"/>
+				<var>
+				<var-name>maxlength</var-name>
+				<var-value>1000</var-value>
+				</var>
+			</field> 
+			
+			<field property="eventBeginDe" depends="required, date">
+        		<arg0 key="교육시작일자" resource="false"/>
+				<var>
+				<var-name>datePatternStrict</var-name>
+				<var-value>yyyy-MM-dd</var-value>
+				</var>
+			</field>
+			
+			<field property="eventEndDe" depends="required, date">
+        		<arg0 key="교육종료일자" resource="false"/>
+				<var>
+				<var-name>datePatternStrict</var-name>
+				<var-value>yyyy-MM-dd</var-value> 
+				</var>
+			</field>
+			
+			<field property="rceptEndDe" depends="required, date">
+        		<arg0 key="마감일" resource="false"/>
+				<var>
+				<var-name>datePatternStrict</var-name>
+				<var-value>yyyy-MM-dd</var-value> 
+				</var>
+			</field>
+			
+			<field property="garden" depends="required">
+                <arg0 key="정원" resource="false"/>
+            </field>
+			
+			<field property="eventMngtInsttNm" depends="required, maxlength">
+                <arg0 key="주최기관" resource="false"/>
+                <arg1 key="60" resource="false"/>
+                <var>
+                <var-name>maxlength</var-name>
+                <var-value>60</var-value>
+                </var>
+            </field>		
+									
+		</form>
+    </formset>
+
+</form-validation>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.tclsMng.dao.TclsMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+  <select id="readTclsMngList" resultType="TclsMngVo" parameterType="TclsMngVo">
+	SELECT   
+          TCLS_ID as tcls_id               /* 산업기술분류코드 고유ID */ 
+        , TCLS_NM as tcls_nm               /* 산업기술분류코드 명 */ 
+        , TCLS_LEVL as tcls_levl           /* 산업기술분류코드레벨 */ 
+        , ifnull(TCLS_PRTS_ID,'0') as tcls_prts_id     /* 상위 산업기술분류코드 ID */ 
+        , USE_YN as use_yn       /* 산업기술분류코드 사용여부 */         
+        , MODIFY_DTTM as MODIFY_DTTM     /* 산업기술분류코드 수정일시 */ 
+        , modify_id as modify_id         /* 산업기술분류코드 수정자 */ 
+        , CREATE_DTTM as create_dttm       /* 산업기술분류코드 생성일시 */ 
+        , CREATE_ID as create_id           /* 산업기술분류코드 생성자 */ 
+     FROM PTL_TECH_CLS_CODE                         /* 산업기술분류코드관리 */ 
+    WHERE 1=1 
+ 	<if test="tcls_id != null and tcls_id != ''">
+ 		AND TCLS_ID = #{tcls_id, jdbcType = VARCHAR} 
+ 	</if>
+    ORDER BY TCLS_LEVL , TCLS_ID
+  </select>
+
+
+<!-- 산업기술분류 리스트 -->
+	<select id="selectTclsMngPopList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectTclsMngPopList */ 	
+ 	 	<include refid="getPagingSelect"></include>
+		  select aa.* from(
+			   select  t.tcls_id as  sub_cate_id
+			        ,  t.tcls_nm as  sub_cate_nm      
+			        ,  (select a.tcls_id from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as  mid_cate_id       
+			        ,  (select a.tcls_nm from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as  mid_cate_nm
+			        ,  (select a.tcls_prts_id from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as     main_cate_id
+			        ,  (select (select  b.tcls_nm 
+			                       from  rpms.PTL_TECH_CLS_CODE b
+			                      where  b.tcls_id = a.tcls_prts_id )  
+			              from rpms.PTL_TECH_CLS_CODE a 
+			             where a.tcls_id = t.tcls_prts_id ) as  main_cate_nm   
+			     from  rpms.PTL_TECH_CLS_CODE t                        /* 산업기술분류코드관리 */ 
+			    where  1=1  	
+			      and  t.tcls_levl = '2'		     
+			  ) aa
+			  where   1=1 
+			   <if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "cate_nm"' >
+			    		AND (
+			    		     replace(aa.sub_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.main_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.mid_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		     )
+					</if>
+					<if test='searchopt == "cate_id"' >
+			    		AND (
+			    		     replace(aa.sub_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.main_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.mid_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		     )
+					</if>
+					
+				</if>
+			  order by  aa.sub_cate_id 
+	 	<include refid="getPagingWhere"></include>
+	</select>
+ 
+
+<!-- 산업기술분류 리스트 -->
+	<select id="selectTclsMngTotalPopCount"  parameterType="java.util.Map"  resultType="int">
+ 		/* selectTclsMngTotalPopCount */ 	
+ 	 	
+		  select COUNT(*) from(
+			   select  t.tcls_id as  sub_cate_id
+			        ,  t.tcls_nm as  sub_cate_nm      
+			        ,  (select a.tcls_id from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as  mid_cate_id       
+			        ,  (select a.tcls_nm from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as  mid_cate_nm
+			        ,  (select a.tcls_prts_id from rpms.PTL_TECH_CLS_CODE a where  a.tcls_id = t.tcls_prts_id ) as     main_cate_id
+			        ,  (select (select  b.tcls_nm 
+			                       from  rpms.PTL_TECH_CLS_CODE b
+			                      where  b.tcls_id = a.tcls_prts_id )  
+			              from rpms.PTL_TECH_CLS_CODE a 
+			             where a.tcls_id = t.tcls_prts_id ) as  main_cate_nm   
+			     from  rpms.PTL_TECH_CLS_CODE t                        /* 산업기술분류코드관리 */ 
+			    where  1=1  	
+			      and  t.tcls_levl = '2'		     
+			  ) aa
+			  where   1=1 
+			   <if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "cate_nm"' >
+			    		AND (
+			    		     replace(aa.sub_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.main_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.mid_cate_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		     )
+					</if>
+					<if test='searchopt == "cate_id"' >
+			    		AND (
+			    		     replace(aa.sub_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.main_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		   OR replace(aa.mid_cate_id , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			    		     )
+					</if>
+					
+				</if>
+			  
+	 
+	</select>
+ 
+  <insert id="insertTclsMng" parameterType="TclsMngVo">
+   INSERT INTO 
+        PTL_TECH_CLS_CODE  /* 산업기술분류코드관리 */ 
+        ( 
+          TCLS_ID
+        , TCLS_NM
+        , TCLS_LEVL
+        , TCLS_PRTS_ID
+        , USE_YN
+        , MODIFY_DTTM
+        , modify_id
+        , CREATE_DTTM
+        , CREATE_ID
+     ) 
+ VALUES 
+     ( 
+          #{tcls_id, jdbcType=VARCHAR}         /* 산업기술분류코드 고유id */ 
+        , #{tcls_nm, jdbcType=VARCHAR}         /* 산업기술분류코드 명 */ 
+        , #{tcls_levl, jdbcType=VARCHAR}       /* 산업기술분류코드레벨 */ 
+        , ifnull(#{tcls_prts_id, jdbcType=VARCHAR},'')    /* 상위 산업기술분류코드 id */ 
+        , #{use_yn, jdbcType=VARCHAR}     /* 산업기술분류코드 사용여부 */    
+        , now()            /* 산업기술분류코드 수정일시 */ 
+        , #{modify_id, jdbcType = VARCHAR}          /* 산업기술분류코드 수정자 */ 
+        , now()            /* 산업기술분류코드 생성일시 */ 
+        , #{create_id, jdbcType = VARCHAR}           /* 산업기술분류코드 생성자 */ 
+     ) 
+  
+  </insert>
+
+  <update id="updateTclsMng"  parameterType="TclsMngVo">
+    UPDATE 
+          PTL_TECH_CLS_CODE  /* 산업기술분류코드관리 */ 
+      SET 
+          TCLS_NM =  #{tcls_nm, jdbcType=VARCHAR}    /* 산업기술분류코드 명 */  
+        , TCLS_LEVL =  #{tcls_levl, jdbcType=VARCHAR}    /* 산업기술분류코드레벨 */ 
+        , TCLS_PRTS_ID =  #{tcls_prts_id, jdbcType=VARCHAR}    /* 상위 산업기술분류코드 ID */ 
+        , USE_YN =  #{use_yn, jdbcType=VARCHAR}    /* 산업기술분류코드 사용여부 */     
+        , MODIFY_DTTM =  now()    /* 산업기술분류코드 수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}   /* 산업기술분류코드 수정자 */ 
+ WHERE 1=1 
+   AND TCLS_ID = #{tcls_id, jdbcType = VARCHAR} 
+  </update>
+
+  <delete id="deleteTclsMng" parameterType="TclsMngVo">
+    DELETE FROM PTL_TECH_CLS_CODE
+      WHERE TCLS_ID IN
+                  (SELECT TCLS_ID
+                     FROM PTL_TECH_CLS_CODE
+                    WHERE TCLS_PRTS_ID IN
+                                (SELECT TCLS_ID
+                                   FROM PTL_TECH_CLS_CODE
+                                  WHERE 1 = 1
+                                        AND (TCLS_PRTS_ID = #{tcls_id} OR TCLS_ID = #{tcls_id}))
+            	UNION ALL
+                   SELECT TCLS_ID
+                     FROM PTL_TECH_CLS_CODE
+                    WHERE 1 = 1
+                      AND TCLS_ID = #{tcls_id})
+  </delete>
+  
+  
+  <update id="updateTclsMngDtl" parameterType="TclsMngVo">
+    UPDATE 
+          PTL_TECH_CLS_CODE  /* 산업기술분류코드관리 */ 
+      SET 
+          USE_YN =  CASE WHEN #{use_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE USE_YN END    /* 산업기술분류코드 사용여부 */ 
+        , MODIFY_DTTM =  now()    /* 산업기술분류코드 수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}    /* 산업기술분류코드 수정자 */ 
+ WHERE 1=1 
+   AND TCLS_PRTS_ID = #{tcls_id, jdbcType = VARCHAR}   
+  </update>
+  
+</mapper>

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.execute.wbs.dao.WbsDao">
+
+ 
+ 	<!-- wbc 리스트 -->
+	<select id="selectWbsList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectWbsList */ 	
+			 	 	
+					 
+			WITH RECURSIVE wbs_cte AS (
+			    SELECT 
+			            item_id
+			          , item_nm
+			          , item_levl
+			          , item_prts_id
+			          , item_resp
+			          , wbs_id
+			    FROM rpms.ptl_wbs_item 
+			    WHERE WBS_ID = #{wbs_id}
+			    UNION ALL
+			    SELECT 
+			    		 m.item_id
+			          , m.item_nm
+			          , m.item_levl
+			          , m.item_prts_id
+			          , m.item_resp
+			          , m.wbs_id
+			    FROM rpms.ptl_wbs_item m
+			    JOIN wbs_cte cte ON m.item_prts_id = cte.item_id
+			    WHERE m.WBS_ID = #{wbs_id}       
+			)
+			SELECT  distinct
+					item_id
+		          , item_nm
+		          , item_levl
+		          , item_prts_id
+		          , item_resp
+		          , ifnull(rpms.FN_GETRESPNAMESCALL(item_resp),'')    as  item_resp_nm
+		          , wbs_id
+			FROM wbs_cte
+  				order by CAST( item_id AS UNSIGNED INTEGER)
+	</select>
+		<!-- wbc 리스트 -->
+	<select id="selectWbsProgressRateList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectWbsProgressRateList */ 	
+			 	 	
+		  select item_id 
+		       , plan_cnt 
+		       , perfor_cnt  
+		       , ROUND((ifnull(perfor_cnt , 1)/ ifnull(plan_cnt , 1))*100 , 2) as item_ratio 
+		    from (
+	      select a.wbs_sch_ym
+		       , a.item_id
+			   , (select count(t.wbs_sch_id) from rpms.ptl_wbs_schedule t where t.wbs_id = a.wbs_id  and  t.item_id = a.item_id  and t.wbs_sch_gbn = 'plan' ) as plan_cnt 
+			   , (select count(t.wbs_sch_id) from rpms.ptl_wbs_schedule t where t.wbs_id = a.wbs_id  and  t.item_id = a.item_id  and t.wbs_sch_gbn = 'perfor' ) as perfor_cnt 
+	        from rpms.ptl_wbs_schedule a , rpms.ptl_wbs b 
+	       where a.wbs_id =  b.wbs_id
+	         and a.wbs_sch_ym  between date_format(b.wbs_str_dt  , '%Y-%m') and date_format(b.wbs_end_dt, 'm')  
+	         and a.wbs_id = #{wbs_id}       
+	    group by a.wbs_sch_ym ,a.wbs_id , a.item_id
+        order by a.item_id,   a.wbs_sch_ym
+	      ) a 
+	    
+   
+   
+
+	</select>
+	<select id="selectWbsInfo"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	  SELECT wbs_id
+	 	   , wbs_str_dt
+	 	   , wbs_end_dt
+	 	   , proj_year_id
+	 	FROM PTL_WBS
+	 	where proj_year_id = #{proj_year_id}
+	</select>
+	
+		<!-- wbc 월별 주차 리스트 -->
+	<select id="selectWbsCalendarList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectWbsCalendarList */ 	
+	
+		WITH RECURSIVE calendar AS (
+		    SELECT #{strdate} AS start_date
+		    UNION ALL
+		    SELECT start_date + INTERVAL 1 DAY
+		    FROM calendar
+		    WHERE start_date <![CDATA[ <= ]]> #{enddate}
+		   
+		),
+		week_numbers AS (
+		    SELECT
+		        DATE_FORMAT(start_date, '%Y-%m') AS ym,
+		        WEEK(start_date) AS week,
+		        ROW_NUMBER() OVER (PARTITION BY  WEEK(start_date) ORDER BY start_date) AS rn
+		    FROM calendar
+		    WHERE start_date  <![CDATA[<= ]]> #{enddate}
+		       group by start_date
+		)
+		SELECT ym, week, rn
+		FROM week_numbers
+		WHERE rn = 1 
+		  and week <![CDATA[>  ]]>0
+		ORDER BY ym, week
+
+	</select>
+	
+		<!-- wbc 월별 주차 리스트 -->
+	<select id="selectWbsScheduleList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectWbsScheduleList */ 	
+	
+	select wbs_sch_id
+		, wbs_sch_ym
+		, wbs_sch_week
+		, wbs_sch_gbn
+		, wbs_id
+		, item_id		
+	 from rpms.ptl_wbs_schedule
+    where wbs_id = #{wbs_id}
+
+
+	</select>
+	
+	
+  <insert id="insertWbsItem" parameterType="java.util.Map">
+   
+   INSERT INTO  PTL_WBS_ITEM  
+        ( 
+	          ITEM_ID
+	        , ITEM_NM
+	        , ITEM_LEVL
+	        , ITEM_PRTS_ID
+	        , ITEM_RESP
+	        , WBS_ID
+	        , USE_YN
+	        , CREATE_DTTM
+	        , CREATE_ID
+     	) 
+ 	VALUES 
+    	( 
+	          #{item_id, jdbcType=VARCHAR}         			/* wbs item 고유id */ 
+	        , #{item_nm, jdbcType=VARCHAR}         			/* wbs item 명 */ 
+	        , #{item_levl, jdbcType=VARCHAR}       			/* wbs item레벨 */ 
+	        , ifnull(#{item_prts_id, jdbcType=VARCHAR},'')  /* 상위 wbs item id */ 
+	        , #{item_resp, jdbcType=VARCHAR}       			/* wbs item 연구자 id  */ 
+	        , #{wbs_id, jdbcType=VARCHAR}    				/* wbs id */            
+	        , #{use_yn, jdbcType=VARCHAR}     				/* wbs item 사용여부 */    
+	        , now()            								/* wbs item 생성일시 */ 
+	        , #{create_id, jdbcType = VARCHAR}              /* wbs item 생성자 */ 
+       ) 
+  </insert>
+		
+  <insert id="insertWbsSchedule" parameterType="java.util.Map">
+   <selectKey keyProperty="wbs_sch_id" resultType="string" order="BEFORE">
+      SELECT NEXTVAL(ptl_wbs_schedule_seq) FROM DUAL
+    </selectKey>
+   INSERT INTO  PTL_WBS_SCHEDULE
+        ( 
+	          WBS_SCH_ID
+	        , WBS_SCH_YM
+	        , WBS_SCH_WEEK
+	        , WBS_SCH_GBN	        
+	        , WBS_ID
+	        , ITEM_ID
+	        , CREATE_DTTM
+	        , CREATE_ID
+     	) 
+ 	VALUES 
+    	(  
+	          #{wbs_sch_id, jdbcType=VARCHAR}         			
+	        , #{wbs_sch_ym, jdbcType=VARCHAR}         			
+	        , #{wbs_sch_week, jdbcType=VARCHAR}       		
+	        , #{wbs_sch_gbn, jdbcType=VARCHAR}       			               		
+	        ,   #{wbs_id, jdbcType=VARCHAR}      				          
+	        , #{item_id, jdbcType=VARCHAR}      			         		
+	        , now()            								 
+	        , #{create_id, jdbcType = VARCHAR}             
+       ) 
+  </insert>
+  
+  		
+  <insert id="insertWbsBaseInfo" parameterType="java.util.Map">
+   <selectKey keyProperty="wbs_id" resultType="string" order="BEFORE">
+      SELECT NEXTVAL(ptl_wbs_seq) FROM DUAL
+    </selectKey>
+   INSERT INTO  PTL_WBS
+        ( 
+	          WBS_ID
+	        , WBS_STR_DT
+	        , WBS_END_DT	        
+	        , PROJ_YEAR_ID	        	        
+	        , CREATE_DTTM
+	        , CREATE_ID
+     	) 
+ 	VALUES 
+    	(  
+	          #{wbs_id, jdbcType=VARCHAR}         			      			
+	        , #{wbs_str_dt, jdbcType=VARCHAR}       		
+	        , #{wbs_end_dt, jdbcType=VARCHAR}       			               			              				         
+	        , #{proj_year_id, jdbcType=VARCHAR}      			       				 	       	
+	        , now()            								 
+	        , #{create_id, jdbcType = VARCHAR}             
+       ) 
+       ON DUPLICATE KEY UPDATE
+    WBS_STR_DT = #{wbs_str_dt, jdbcType=VARCHAR}     
+    , WBS_END_DT =  #{wbs_end_dt, jdbcType=VARCHAR}     
+       
+  </insert>
+    	
+  <update id="updateWbsItem" parameterType="java.util.Map">
+   
+   	UPDATE PTL_WBS_ITEM SET
+   		     ITEM_NM = #{item_nm, jdbcType = VARCHAR}
+   		   ,  ITEM_RESP = #{item_resp, jdbcType = VARCHAR}
+   		   , MODIFY_DTTM   = now()
+	       , MODIFY_ID =  #{modify_id, jdbcType = VARCHAR}
+     WHERE WBS_ID =    #{wbs_id, jdbcType=VARCHAR}
+      AND ITEM_ID =    #{item_id, jdbcType=VARCHAR}
+    
+  </update>
+  
+  	
+  <update id="deleteWbsItem" parameterType="java.util.Map">
+   
+   	DELETE FROM PTL_WBS_ITEM    		  
+     WHERE WBS_ID =    #{wbs_id, jdbcType=VARCHAR}
+       AND ITEM_ID =    #{item_id, jdbcType=VARCHAR}
+    
+  </update>
+  
+  <update id="deleteWbsSchedule" parameterType="java.util.Map">
+   
+   	DELETE FROM PTL_WBS_SCHEDULE    		  
+     WHERE WBS_SCH_ID =    #{wbs_sch_id, jdbcType=VARCHAR}
+    
+  </update>
+  
+ <delete id="deleteAllWbsSchedule" parameterType="java.util.Map">
+   
+   	DELETE FROM PTL_WBS_SCHEDULE    		  
+ 	  WHERE WBS_ID =    #{wbs_id, jdbcType=VARCHAR} 
+        AND ITEM_ID =    #{item_id, jdbcType=VARCHAR} 
+  </delete>
+  
+</mapper>

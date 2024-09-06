@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.content.popup.dao.PopMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A 
+		     
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	<select id="selectPopList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	 <if test='main_yn != "Y" '>
+ 	 	<include refid="getPagingSelect"></include>
+ 	 </if>
+		SELECT
+		    pop_seq
+		  , pop_type
+		  , pop_target    
+		  , pop_title
+		  , pop_contents
+		  , pop_url 
+		  , pop_link      
+		  , pop_width
+		  , pop_height
+		  , pop_x, pop_y 
+		  , REG_DATE AS create_dttm
+		  , edit_date   
+		  , start_date
+		  , end_date	
+		  , date_format(REG_DATE,'%Y-%m-%d') AS create_dttm_al
+		  , date_format(EDIT_DATE,'%Y-%m-%d') AS edit_date_al   		  		  
+		FROM
+		    PTL_POPUP , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B     
+		WHERE 1 = 1		
+		<if test='searchopt == "pu_subject" ' >
+		    AND POP_TITLE like concat('%',#{searchword},'%')
+		</if>
+		<if test='searchopt == "pu_contents" '>
+		    AND POP_CONTENTS like concat('%',#{searchword},'%')
+		</if>		
+		<if test="pop_type != null and pop_type != '' ">
+		    AND pop_type = #{pop_type}
+		</if>		
+		<if test="pop_target != null and pop_target != '' ">
+		    AND pop_target = #{pop_target}
+		</if>		
+		<if test='main_yn == "Y" '>
+			AND date_format(now(), '%Y-%m-%d') BETWEEN START_DATE AND END_DATE
+		</if>		
+		
+		<!-- ORDER BY END_DATE DESC, START_DATE DESC -->
+		ORDER BY POP_SEQ DESC
+		<if test='main_yn != "Y" '>
+		 	<include refid="getPagingWhere"></include>
+		</if>
+	</select>
+	
+	<select id="selectPopTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		FROM
+		    PTL_POPUP
+		WHERE 1 = 1		
+		<if test='searchopt == "pu_subject" ' >
+		    AND POP_TITLE like concat('%',#{searchword},'%')
+		</if>
+		<if test='searchopt == "pu_contents" '>
+		    AND POP_CONTENTS like concat('%',#{searchword},'%')
+		</if>		
+		<if test="pop_target != null and pop_target != '' ">
+		    AND pop_target = #{pop_target}
+		</if>	
+	</select>
+	
+	
+	<select id="selectPopDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		SELECT
+		    pop_seq
+		  , pop_type
+		  , pop_target    
+		  , pop_title
+		  , pop_contents
+		  , pop_url 
+		  , pop_link      
+		  , pop_width
+		  , pop_height
+		  , pop_x, pop_y 
+		  , REG_DATE AS  create_dttm
+		  , edit_date
+		  , start_date
+		  , end_date	
+		  , date_format(REG_DATE,'%Y-%m-%d') AS create_dttm_al
+		  , date_format(EDIT_DATE,'%Y-%m-%d') AS edit_date_al   	  		  	
+		FROM PTL_POPUP
+		WHERE pop_seq=  #{pop_seq, jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectMainPopList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	
+		SELECT
+		    pop_seq
+		  , pop_type
+		  , pop_target    
+		  , pop_title
+		  , pop_contents
+		  , pop_url 
+		  , pop_link      
+		  , pop_width
+		  , pop_height
+		  , pop_x, pop_y 
+		  , REG_DATE AS create_dttm
+		  , edit_date   
+		  , start_date
+		  , end_date	
+		  , date_format(REG_DATE,'%Y-%m-%d') AS create_dttm_al
+		  , date_format(EDIT_DATE,'%Y-%m-%d') AS edit_date_al   		  		  
+		FROM
+		    PTL_POPUP
+		WHERE 1 = 1		
+		<if test="pop_type != null and pop_type != '' ">			
+		    AND pop_type = #{pop_type}
+		</if>		
+		<if test="pop_target != null and pop_target != '' ">
+			<choose>
+    			<when test="searchGbn != null and searchGbn != '' "> <!--searchGbn 관리자메뉴 팝업관리 - 팝업 미리보기에서 넘어온 parameter  -->	    		
+	    			AND pop_target in ('N' ,'L')
+	    		</when>
+	    		<otherwise>
+	    			AND pop_target = #{pop_target}
+	    		</otherwise>
+	    	</choose>		    
+		</if>		
+		<if test="pop_seq != null and pop_seq != '' "> 
+			AND pop_seq=  #{pop_seq, jdbcType=INTEGER}
+		</if>			
+		  <if test="searchGbn == null or searchGbn == '' "> 			
+		  AND  date_format(now(), '%Y-%m-%d') BETWEEN START_DATE AND END_DATE
+		  </if>
+		ORDER BY END_DATE DESC, START_DATE DESC	
+	</select>
+	
+	<select id="selectPopSeq" resultType="integer">
+		SELECT IFNULL(MAX(POP_SEQ),0)+1 FROM PTL_POPUP a
+	</select>
+	
+	<insert id="insertPopMng" parameterType="java.util.Map">
+		INSERT INTO PTL_POPUP (
+			POP_SEQ,
+			POP_TYPE,
+			POP_TARGET,
+			POP_TITLE,
+			POP_CONTENTS,
+			POP_URL,
+			POP_LINK,
+			POP_WIDTH,
+			POP_HEIGHT,
+			POP_X,
+			POP_Y,
+			REG_DATE,
+			EDIT_DATE,
+			START_DATE,
+			END_DATE	
+		) VALUES (
+			#{pop_seq},
+			#{pop_type, jdbcType = VARCHAR},
+			#{pop_target, jdbcType = VARCHAR},
+			#{pop_title, jdbcType = VARCHAR},
+			#{pop_contents, jdbcType = VARCHAR},
+			#{pop_url, jdbcType = VARCHAR},
+			#{pop_link, jdbcType = VARCHAR},
+			#{pop_width, jdbcType = VARCHAR},
+			#{pop_height, jdbcType = VARCHAR},
+			#{pop_x, jdbcType = VARCHAR},
+			#{pop_y, jdbcType = VARCHAR},
+			now(),
+			now(),  
+			#{start_date, jdbcType = VARCHAR},
+			#{end_date, jdbcType = VARCHAR}
+		)
+	</insert>
+	
+		<update id="updatePopMng" parameterType="java.util.Map">
+		UPDATE PTL_POPUP SET 
+			  POP_TYPE = #{pop_type, jdbcType = VARCHAR}
+			, POP_TARGET = #{pop_target, jdbcType = VARCHAR}
+			, POP_TITLE = #{pop_title, jdbcType = VARCHAR}
+			, POP_CONTENTS = #{pop_contents, jdbcType = VARCHAR}
+			, POP_URL = #{pop_url, jdbcType = VARCHAR}
+			, POP_LINK = #{pop_link, jdbcType = VARCHAR}
+			, POP_WIDTH = #{pop_width, jdbcType = VARCHAR}
+			, POP_HEIGHT = #{pop_height, jdbcType = VARCHAR}
+			, POP_X = #{pop_x, jdbcType = VARCHAR}
+			, POP_Y = #{pop_y, jdbcType = VARCHAR}
+			, EDIT_DATE = now()
+			, START_DATE = #{start_date, jdbcType = VARCHAR}
+			, END_DATE = #{end_date, jdbcType = VARCHAR}
+		WHERE 1 = 1 
+			AND POP_SEQ =  #{pop_seq, jdbcType=INTEGER}
+	</update>
+	
+	
+	<delete id="deletePop" parameterType="java.util.Map">
+		DELETE FROM PTL_POPUP WHERE POP_SEQ = #{pop_seq, jdbcType=INTEGER}
+	</delete>
+	
+	
+</mapper>

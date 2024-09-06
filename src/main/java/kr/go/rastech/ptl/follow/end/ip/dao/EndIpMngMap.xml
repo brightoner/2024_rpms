@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.end.ip.dao.EndIpMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 종료사후관리 지적재산권 list -->
+	<select id="selectEndIpList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndIpList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.END_IP_ID
+			  , A.PROJ_END_ID
+			  , A.END_IP_NM
+			  , A.END_IP_NO
+			  , DATE_FORMAT(A.END_IP_DT,'%Y-%m-%d') AS END_IP_DT
+			  , A.END_IP_GB
+			  , A.END_IP_DOMESTIC_GB
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_END_FOLLOW_IP A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+ 		 WHERE  1=1  
+ 		   AND  A.PROJ_END_ID = #{proj_end_id}
+ 	  ORDER BY  A.END_IP_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 종료사후관리 지적재산권 count -->
+	<select id="selectEndIpListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndIpListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_END_FOLLOW_IP
+ 		 WHERE  1=1  
+ 		   AND  PROJ_END_ID = #{proj_end_id}
+	</select>
+	
+	
+	<!-- 종료사후관리 지적재산권 상세보기 -->
+	<select id="selectEndIpDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectEndIpDtl */
+		SELECT  END_IP_ID
+			  , PROJ_END_ID
+			  , END_IP_NM
+			  , END_IP_NO
+			  , DATE_FORMAT(END_IP_DT,'%Y-%m-%d') AS END_IP_DT
+			  , END_IP_GB
+			  , END_IP_DOMESTIC_GB
+			  , DATE_FORMAT(CREATE_ID,'%Y-%m-%d') AS CREATE_ID
+			  , CREATE_DTTM
+			  , DATE_FORMAT(MODIFY_ID,'%Y-%m-%d') AS MODIFY_ID
+			  , MODIFY_DTTM
+ 		  FROM  PTL_END_FOLLOW_IP
+		 WHERE  1=1
+		   AND  END_IP_ID = #{end_ip_id} 
+	</select>	
+	
+	
+	<!-- 종료사후관리 지적재산권 등록 -->
+	<insert id="insertEndIp" parameterType="java.util.Map">
+	/* insertEndIp */
+		 INSERT INTO PTL_END_FOLLOW_IP (
+					  END_IP_ID
+					, PROJ_END_ID
+					, END_IP_NM
+					, END_IP_NO
+					, END_IP_DT
+					, END_IP_GB
+					, END_IP_DOMESTIC_GB
+					, CREATE_ID
+					, CREATE_DTTM
+				) VALUES (
+					<choose>
+						<when test="end_ip_id != null and end_ip_id != ''">
+							#{end_ip_id, jdbcType=VARCHAR}	
+						</when>		
+						<otherwise>
+							NEXTVAL(PTL_END_FOLLOW_IP_SEQ)
+						</otherwise>			
+					</choose>
+					, #{proj_end_id_ip, jdbcType=VARCHAR}	
+					, #{end_ip_nm, jdbcType=VARCHAR}
+					, #{end_ip_no, jdbcType=VARCHAR}
+					, (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{end_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					       ELSE DATE_FORMAT(STR_TO_DATE(#{end_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+					   END) 
+					, #{end_ip_gb, jdbcType=VARCHAR}
+					, #{end_ip_domestic_gb, jdbcType=VARCHAR}
+					, #{create_id, jdbcType=VARCHAR}
+					, NOW()
+				) ON DUPLICATE KEY UPDATE
+					  END_IP_NM = #{end_ip_nm, jdbcType=VARCHAR}	
+					, END_IP_NO = #{end_ip_no, jdbcType=VARCHAR}
+					, END_IP_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{end_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					       				ELSE DATE_FORMAT(STR_TO_DATE(#{end_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+					  			   END) 
+					, END_IP_GB = #{end_ip_gb, jdbcType=VARCHAR}
+					, end_IP_DOMESTIC_GB = #{end_ip_domestic_gb, jdbcType=VARCHAR}
+					, MODIFY_ID = #{create_id, jdbcType=VARCHAR}
+					, MODIFY_DTTM = NOW() 
+    </insert>
+    
+    
+    <!-- 종료사후관리 지적재산권 삭제 -->
+	<delete id="deleteEndIp" parameterType="java.util.Map">
+	/* deleteEndIp */
+		DELETE
+		  FROM  PTL_END_FOLLOW_IP
+		 WHERE  1=1
+		   AND  END_IP_ID = #{end_ip_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

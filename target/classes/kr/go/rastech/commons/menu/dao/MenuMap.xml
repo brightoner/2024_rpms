@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.commons.menu.dao.MenuDao" >
+  <!-- Top 메뉴 목록 조회 -->
+  <select id="selectTopMenuList" parameterType="userVo" resultType="menuVo">
+       SELECT 
+          case when MENU_LEVL =0  then a.MENU_ORD ELSE (SELECT MENU_ORD FROM PTL_MENU_MNGT WHERE MENU_ID = A.MENU_PRTS_ID  ) END AS lvl_gbn,
+          a.MENU_LEVL as lvl          /*lvl 메뉴레벨 */ 
+        , b.URL as url
+        , a.MENU_NM  as menuNm               /* 메뉴 명 */ 
+        , a.MENU_ENG_NM as menuENm               /* 메뉴 명 */ 
+        , CASE WHEN a.MENU_LEVL =0  THEN a.MENU_ORD ELSE c.MENU_ORD END ord_sn
+        , a.MENU_ORD as menu_ord
+        , a.IP_USE_YN as ip_use_yn
+        , a.eng_yn as eng_yn
+        , a.MENU_ID 
+        , (case when (SELECT count(pm.MENU_ID) FROM ptl_menu_mngt pm WHERE pm.MENU_PRTS_ID = a.MENU_ID  ) > 0 then 'Y' ELSE 'N' END)  AS child_yn
+     FROM PTL_MENU_MNGT a                       /* 메뉴관리 */ 
+            INNER JOIN  (
+            SELECT DISTINCT b.MENU_ID, c.URL
+                FROM PTL_MENU_ROLT b
+                   , PTL_URL_MNGT c
+              WHERE b.MENU_ID= c.MENU_ID
+                AND b.AUTH_GBN=c.AUTH_GBN
+                AND c.AUTH_GBN='VIEW'
+               <foreach collection="roleList" item="role" separator="," open="AND b.ROL_ID IN(" close=", 'ROLE_GUEST')">
+               #{role}
+               </foreach>
+            ) b  ON (a.MENU_ID = b.MENU_ID AND a.TOP_MENU_YN ='Y' AND a.MENU_USE_YN='Y' )
+        LEFT OUTER join (SELECT MENU_ID, MENU_ORD  FROM PTL_MENU_MNGT c WHERE MENU_PRTS_ID IS NULL) c
+		   ON (a.MENU_PRTS_ID = c.MENU_ID)   
+    ORDER BY lvl_gbn, lvl ,MENU_ORD
+  </select>
+
+  <!-- Left 메뉴 목록 조회 -->
+  <select id="selectLeftMenuList" parameterType="userVo" resultType="menuVo">
+  /*selectLeftMenuList*/
+    WITH RECURSIVE MENUMNGT AS (
+		SELECT A.* 
+		FROM ptl_menu_mngt A
+		WHERE    A.MENU_LEVL = '0'
+		UNION ALL
+		SELECT B.*
+		FROM ptl_menu_mngt B
+	  JOIN MENUMNGT ON MENUMNGT.MENU_ID = B.MENU_PRTS_ID
+	)
+	SELECT   case when MENU_LEVL =0  then MENU_ORD ELSE (SELECT MENU_ORD FROM PTL_MENU_MNGT WHERE MENU_ID = A.MENU_PRTS_ID  ) END AS lvl_gbn
+	     ,a.MENU_ID 
+        ,  a.MENU_PRTS_ID  
+        , a.MENU_LEVL as lvl          /*lvl 메뉴레벨 */ 
+        , b.URL as url
+        , a.MENU_NM  as menuNm               /* 메뉴 명 */ 
+        , a.MENU_ENG_NM as menuENm               /* 메뉴 명 */ 
+     	  , a.IP_USE_YN as ip_use_yn
+        , a.eng_yn as eng_yn
+	  , CASE WHEN (SELECT COUNT(*) FROM ptl_menu_mngt WHERE a.MENU_ID = MENU_PRTS_ID) > 0 THEN 0
+       ELSE 1 END AS menu_con
+	FROM MENUMNGT a , (
+            SELECT DISTINCT b.MENU_ID, c.URL
+                FROM PTL_MENU_ROLT b
+                   , PTL_URL_MNGT c
+              WHERE b.MENU_ID= c.MENU_ID
+                AND b.AUTH_GBN=c.AUTH_GBN
+                AND c.AUTH_GBN='VIEW'
+          <foreach collection="roleList" item="role" separator="," open="AND b.ROL_ID IN(" close=", 'ROLE_GUEST')">
+               #{role}
+               </foreach>
+            ) b
+       WHERE 1=1 
+       AND a.MENU_ID = b.MENU_ID
+       AND a.LEFT_MENU_YN ='Y'
+       AND a.MENU_USE_YN='Y'
+       AND a.MENU_ID != 'SYS_MNG'
+   ORDER by lvl_gbn,a.MENU_LEVL, a.MENU_ORD
+  </select>
+  
+  <!-- 사용자 pop 메뉴 목록 조회 -->
+  <select id="selectPopMenuList" parameterType="userVo" resultType="menuVo">
+  /*selectPopMenuList*/
+    WITH RECURSIVE MENUMNGT AS (
+		SELECT A.* 
+		FROM ptl_menu_mngt A
+		WHERE    A.MENU_LEVL = '0'
+		UNION ALL
+		SELECT B.*
+		FROM ptl_menu_mngt B
+	  JOIN MENUMNGT ON MENUMNGT.MENU_ID = B.MENU_PRTS_ID
+	)
+	SELECT   case when MENU_LEVL =0  then MENU_ORD ELSE (SELECT MENU_ORD FROM PTL_MENU_MNGT WHERE MENU_ID = A.MENU_PRTS_ID  ) END AS lvl_gbn
+	     ,a.MENU_ID 
+        ,  a.MENU_PRTS_ID  
+        , a.MENU_LEVL as lvl          /*lvl 메뉴레벨 */ 
+        , b.URL as url
+        , a.MENU_NM  as menuNm               /* 메뉴 명 */ 
+        , a.MENU_ENG_NM as menuENm               /* 메뉴 명 */ 
+     	  , a.IP_USE_YN as ip_use_yn
+        , a.eng_yn as eng_yn
+	  , CASE WHEN (SELECT COUNT(*) FROM ptl_menu_mngt WHERE a.MENU_ID = MENU_PRTS_ID) > 0 THEN 0
+       ELSE 1 END AS menu_con
+	FROM MENUMNGT a , (
+            SELECT DISTINCT b.MENU_ID, c.URL
+                FROM PTL_MENU_ROLT b
+                   , PTL_URL_MNGT c
+              WHERE b.MENU_ID= c.MENU_ID
+                AND b.AUTH_GBN=c.AUTH_GBN
+                AND c.AUTH_GBN='VIEW'
+          <foreach collection="roleList" item="role" separator="," open="AND b.ROL_ID IN(" close=", 'ROLE_GUEST')">
+               #{role}
+               </foreach>
+            ) b
+       WHERE 1=1 
+       AND a.MENU_ID = b.MENU_ID
+       AND a.POP_MENU_YN ='Y'
+       AND a.MENU_USE_YN='Y'
+       AND a.MENU_LEVL = '0'
+       AND a.MENU_ID != 'SYS_MNG'
+   ORDER by lvl_gbn,a.MENU_LEVL, a.MENU_ORD
+  </select>
+  
+  <select id="selectLv3Menu" parameterType="userVo" resultType="menuVo">
+   SELECT  a.MENU_ID ,
+          MENU_PRTS_ID , 
+          a.MENU_LEVL as lvl          /*lvl 메뉴레벨 */ 
+        , b.URL as url
+        , CASE WHEN #{engYn} = 'E' THEN a.MENU_ENG_NM ELSE a.MENU_NM END as menuNm               /* 메뉴 명 */ 
+     FROM PTL_MENU_MNGT a                       /* 메뉴관리 */ 
+            , (
+            SELECT DISTINCT b.MENU_ID, c.URL
+                FROM PTL_MENU_ROLT b
+                   , PTL_URL_MNGT c
+              WHERE b.MENU_ID= c.MENU_ID
+                AND b.AUTH_GBN=c.AUTH_GBN
+                AND c.AUTH_GBN in ('VIEW' )
+               <foreach collection="roleList" item="role" separator="," open="AND b.ROL_ID IN(" close=", 'ROLE_GUEST')">
+               #{role}
+               </foreach>
+            ) b
+    WHERE 1=1 
+       AND a.MENU_ID = b.MENU_ID
+       AND a.LEFT_MENU_YN ='Y'
+       AND a.MENU_USE_YN='Y'
+       AND a.MENU_ID != 'SYS_MNG'
+       AND a.MENU_LEVL =2
+    order  by MENU_PRTS_ID, a.MENU_ORD
+  </select>
+
+  <!-- 전체 URL 목록 조회 -->
+  <select id="selectUrlList" resultType="menuVo">
+   SELECT 
+          a.MENU_LEVL as lvl          /*lvl 메뉴레벨 */ 
+        , b.URL as url
+        , a.MENU_NM as menuNm               /* 메뉴 명 */ 
+     FROM PTL_MENU_MNGT a                       /* 메뉴관리 */ 
+            , (
+            SELECT DISTINCT b.MENU_ID, c.URL
+                FROM PTL_MENU_ROLT b
+                   , PTL_URL_MNGT c
+              WHERE b.MENU_ID= c.MENU_ID
+                  AND c.AUTH_GBN IN ('VIEW')
+            ) b
+    WHERE 1=1 
+       AND a.MENU_ID = b.MENU_ID 	
+    ORDER BY lvl    
+    
+  </select>
+
+  <select id="selectPrtsId" resultType="String" parameterType="java.util.Map" >
+	SELECT menu_prts_id FROM (
+		SELECT COUNT(*) AS cnt , menu_prts_id FROM (
+			SELECT 1 AS gbn ,  menu_prts_id from PTL_MENU_MNGT a, PTL_URL_MNGT b where A.MENU_ID = b.MENU_ID 
+			AND MENU_PRTS_ID != '' and INSTR(#{url},b.URL) > 0
+			UNION ALL
+			SELECT 2 AS gbn ,  menu_prts_id from PTL_MENU_MNGT a, PTL_URL_MNGT b where A.MENU_ID = b.MENU_ID 
+			AND MENU_PRTS_ID != '' and INSTR(#{referer},b.URL) > 0 
+		) a
+		GROUP BY menu_prts_id
+		ORDER BY gbn ASC
+	) a
+	LIMIT 1
+  </select>
+
+</mapper>

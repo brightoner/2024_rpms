@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.year.etc.dao.EtcMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연차사후관리 기타 list -->
+	<select id="selectYearEtcList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectYearEtcList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.YEAR_ETC_ID
+			  , A.PROJ_YEAR_ID
+			  , A.YEAR_ETC_NM
+			  , A.YEAR_ETC_CN
+			  , A.YEAR_ETC_GB
+			  , A.YEAR_ETC_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , A.MODIFY_ID
+			  , DATE_FORMAT(A.MODIFY_DTTM,'%Y-%m-%d') AS MODIFY_DTTM
+		  FROM  PTL_YEAR_FOLLOW_ETC A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		 WHERE  1=1  
+ 		   AND  A.PROJ_YEAR_ID = #{proj_year_id}
+ 	  ORDER BY  A.YEAR_ETC_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연차사후관리 기타 count -->
+	<select id="selectYearEtcListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectYearEtcListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_YEAR_FOLLOW_ETC
+ 		 WHERE  1=1  
+ 		   AND  PROJ_YEAR_ID = #{proj_year_id}
+	</select>
+	
+	
+	<!-- 연차사후관리 기타 상세보기 -->
+	<select id="selectYearEtcDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearEtcDtl */
+		SELECT  YEAR_ETC_ID
+	  		  , PROJ_YEAR_ID
+			  , YEAR_ETC_NM
+			  , YEAR_ETC_CN
+			  , YEAR_ETC_GB
+			  , YEAR_ETC_INFO
+			  , CREATE_ID
+			  , DATE_FORMAT(CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , MODIFY_ID
+			  , DATE_FORMAT(MODIFY_DTTM,'%Y-%m-%d') AS MODIFY_DTTM
+		  FROM  PTL_YEAR_FOLLOW_ETC
+		 WHERE  1=1
+		   AND  YEAR_ETC_ID = #{year_etc_id} 
+	</select>	
+	
+	
+	<!-- 연차사후관리 기타 등록 -->
+	<insert id="insertYearEtc" parameterType="java.util.Map">
+	/* insertYearEtc */
+		 INSERT INTO PTL_YEAR_FOLLOW_ETC (
+					  YEAR_ETC_ID
+					, PROJ_YEAR_ID
+					, YEAR_ETC_NM
+					, YEAR_ETC_CN
+					, YEAR_ETC_GB
+					, YEAR_ETC_INFO
+					, CREATE_ID
+					, CREATE_DTTM
+				) VALUES (
+					<choose>
+						<when test="year_etc_id != null and year_etc_id != ''">
+							#{year_etc_id, jdbcType=VARCHAR}	
+						</when>		
+						<otherwise>
+							NEXTVAL(PTL_YEAR_FOLLOW_ETC_SEQ)
+						</otherwise>			
+					</choose>
+					, #{proj_year_id_etc, jdbcType=VARCHAR}	
+					, #{year_etc_nm, jdbcType=VARCHAR}	
+					, #{year_etc_cn, jdbcType=VARCHAR}	
+					, #{year_etc_gb, jdbcType=VARCHAR}	
+					, #{year_etc_info, jdbcType=VARCHAR}	
+					, #{create_id, jdbcType=VARCHAR}	
+					, NOW()
+				) ON DUPLICATE KEY UPDATE
+					  YEAR_ETC_NM = #{year_etc_nm, jdbcType=VARCHAR}	
+					, YEAR_ETC_CN = #{year_etc_cn, jdbcType=VARCHAR}	
+					, YEAR_ETC_GB = #{year_etc_gb, jdbcType=VARCHAR}	
+					, YEAR_ETC_INFO = #{year_etc_info, jdbcType=VARCHAR}	
+					, MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+					, MODIFY_DTTM = NOW()
+    </insert>
+    
+    
+    <!-- 연차사후관리 기타 삭제 -->
+	<delete id="deleteYearEtc" parameterType="java.util.Map">
+	/* deleteYearEtc */
+		DELETE
+		  FROM  PTL_YEAR_FOLLOW_ETC
+		 WHERE  1=1
+		   AND  YEAR_ETC_ID = #{year_etc_id} 
+	</delete>
+	
+	
+	
+	
+</mapper>

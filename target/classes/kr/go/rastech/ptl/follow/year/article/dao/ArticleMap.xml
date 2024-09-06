@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.year.article.dao.ArticleDao">
+ 
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연차사후관리 논문 list -->
+	<select id="selectYearArticleList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectYearArticleList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.YEAR_ARTCL_ID
+			  , A.PROJ_YEAR_ID
+			  , A.YEAR_ARTCL_NM
+			  , A.YEAR_ARTCL_AUTH
+			  , A.YEAR_JOUNAL_INFO
+			  , A.YEAR_ARTCL_SCI_GB
+			  , A.YEAR_ARTCL_DOMESTIC_GB
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_YEAR_FOLLOW_ARTICLE A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		 WHERE  1=1  
+ 		   AND  A.PROJ_YEAR_ID = #{proj_year_id}
+ 	  ORDER BY  A.YEAR_ARTCL_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연차사후관리 논문 count -->
+	<select id="selectYearArticleListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectYearArticleListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_YEAR_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  PROJ_YEAR_ID = #{proj_year_id}
+	</select>
+	
+	
+	<!-- 연차사후관리 논문 상세보기 -->
+	<select id="selectYearArticleDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearArticleDtl */
+		SELECT  YEAR_ARTCL_ID
+			  , PROJ_YEAR_ID
+			  , YEAR_ARTCL_NM
+			  , YEAR_ARTCL_AUTH
+			  , YEAR_JOUNAL_INFO
+			  , YEAR_ARTCL_SCI_GB
+			  , YEAR_ARTCL_DOMESTIC_GB
+			  , CREATE_ID
+			  , DATE_FORMAT(CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_YEAR_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  year_artcl_id = #{year_artcl_id} 
+	</select>	
+	
+	
+	<!-- 연차사후관리 논문 등록 -->
+	<insert id="insertYearArticle" parameterType="java.util.Map">
+	/* insertYearArticle */
+		  INSERT INTO PTL_YEAR_FOLLOW_ARTICLE (
+				  YEAR_ARTCL_ID
+				, PROJ_YEAR_ID
+				, YEAR_ARTCL_NM
+				, YEAR_ARTCL_AUTH
+				, YEAR_JOUNAL_INFO
+				, YEAR_ARTCL_SCI_GB
+				, YEAR_ARTCL_DOMESTIC_GB
+				, CREATE_ID
+				, CREATE_DTTM
+			) values (
+				<choose>
+					<when test="year_artcl_id != null and year_artcl_id != ''">
+						#{year_artcl_id, jdbcType=VARCHAR}	
+					</when>		
+					<otherwise>
+						NEXTVAL(PTL_YEAR_FOLLOW_ARTICLE_SEQ)
+					</otherwise>			
+				</choose>
+				, #{proj_year_id_article, jdbcType=VARCHAR}	
+				, #{year_artcl_nm, jdbcType=VARCHAR}	
+				, #{year_artcl_auth, jdbcType=VARCHAR}	
+				, #{year_jounal_info, jdbcType=VARCHAR}	
+				, #{year_artcl_sci_gb, jdbcType=VARCHAR}	
+				, #{year_artcl_domestic_gb, jdbcType=VARCHAR}	
+				, #{create_id, jdbcType=VARCHAR}	
+				, NOW()
+		   ) ON DUPLICATE KEY UPDATE
+				  YEAR_ARTCL_NM = #{year_artcl_nm, jdbcType=VARCHAR}	
+				, YEAR_ARTCL_AUTH = #{year_artcl_auth, jdbcType=VARCHAR}
+				, YEAR_JOUNAL_INFO = #{year_jounal_info, jdbcType=VARCHAR}
+				, YEAR_ARTCL_SCI_GB = #{year_artcl_sci_gb, jdbcType=VARCHAR}
+				, YEAR_ARTCL_DOMESTIC_GB = #{year_artcl_domestic_gb, jdbcType=VARCHAR}
+				, MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+				, MODIFY_DTTM = NOW()
+    </insert>
+    
+    
+    <!-- 연차사후관리 논문 삭제 -->
+	<delete id="deleteYearArticle" parameterType="java.util.Map">
+	/* deleteYearArticle */
+		DELETE
+		  FROM  PTL_YEAR_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  YEAR_ARTCL_ID = #{year_artcl_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

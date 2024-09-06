@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.commons.login.dao.LoginDao" >  
+   <!-- 사용자 관리 -회원 ID 중복 체크 -->
+  <select id="selectIdCheck" resultType="int" parameterType="String">
+    SELECT  count(*) as cnt
+        FROM USER_MNG
+       WHERE USER_ID =  #{loginid}
+  </select>
+
+  <update id="updateUser" parameterType="java.util.Map">
+  		/*updateUser*/
+   		UPDATE ptl_user SET
+   			<if test="password != null and password != ''">
+		 		PASSWORD = #{password}, 
+		 	</if>
+		    LASTUPDDT = sysdate, 
+		    LASTUPDUSRKEY = #{ui_idno}
+	  WHERE EMPLYRKEY = #{ui_idno}
+  
+  </update>
+  
+
+  <!-- login -->
+  <select id="selectUser" resultType="userVo" parameterType="String">	  
+  		/*selectUser*/ 
+		      SELECT  d.EMPLYRKEY AS emplyrkey
+			       ,  d.USER_ID AS loginid
+			       ,  d.NICKNM AS nicknm
+			       ,  d.USERNAME AS username
+			       ,  d.MBTLNUM AS mbtlnum
+   				   ,  d.EMAIL AS email
+				   ,  d.BRTHDY AS brthdy
+			       ,  d.PASSWORD AS password			       
+			       ,  d.MBTLNUM_YN AS mbtlnum_yn
+			       ,  d.SECSNAT AS secsnat		
+				   ,  d.CLASSIFY AS classify	
+			 FROM (SELECT  a.EMPLYRKEY
+			            ,  a.USER_ID
+			            ,  a.NICKNM
+			            ,  a.USERNAME
+			            ,  a.PASSWORD AS PASSWORD		               
+			            ,  a.MBTLNUM		          
+   				        ,  a.EMAIL AS EMAIL
+			            ,  a.BRTHDY
+			            ,  a.SECSNAT
+			            ,  a.CLASSIFY		            		               
+			            ,  a.LASTUPDUSRKEY
+			            ,  a.LASTUPDDT
+			            ,  a.SECSNOPETRKEY
+			            ,  a.SECSNTREDT		               		               
+			            ,  a.MBTLNUM_YN			        
+			         FROM  ptl_user a				  	 
+			        WHERE a.SECSNAT = 'N') d
+			    WHERE 1 = 1 
+			      AND d.USER_ID = #{value}
+		         
+  </select>
+  
+  <select id="UserIdPassCheck" resultType="userVo" parameterType="java.util.Map">	  
+  		/*UserIdPassCheck*/ 
+		SELECT d.EMPLYRKEY AS emplyrkey,
+				       d.USER_ID AS loginid,
+				       d.NICKNM AS nicknm,
+				       d.PASSWORD AS password,
+				       d.MBTLNUM AS mbtlnum,
+				       d.SECSNAT AS secsnat,		
+					    d.EMAIL AS email			   
+			  FROM (SELECT a.EMPLYRKEY,
+			               a.USER_ID,
+			               a.NICKNM,
+			               a.PASSWORD AS PASSWORD,		               
+			               a.MBTLNUM,		           
+			               a.SECSNAT,		            		               
+			               a.REG_DATE,
+			               a.LASTUPDUSRKEY,
+			               a.LASTUPDDT,
+			               a.SECSNOPETRKEY,
+			               a.SECSNTREDT,		               		               
+			               a.MBTLNUM_YN,
+						   a.email AS EMAIL,		             		               
+			               a.SMSAGREE,
+			               a.EMAILAGREE,
+			               a.EMAIL AS USEREMAIL		               
+			         FROM ptl_user a
+			         WHERE a.SECSNAT = 'N') d
+			         WHERE 1 = 1  
+			         AND d.USER_ID = #{loginid}
+			         AND d.password = #{password}
+  </select>
+  
+  
+  <select id="selectUserEmail" resultType="String" parameterType="String">	   
+   SELECT a.EMAIL AS email
+       FROM ptl_user a
+	   WHERE 1 = 1 
+	      AND replace(MBTLNUM,'-','') = replace(#{value},'-','')
+	     AND a.SECSNAT = 'N'
+  </select>
+  
+  <!-- PASS 인증시 전화번호 확인 - ljk -->
+  <select id="selectfindUserChk" resultType="String" parameterType="String">	   
+   SELECT replace(MBTLNUM, '-', '') as mbtlnum
+     FROM ptl_user 
+    WHERE SECSNAT = 'N' 
+      AND replace(MBTLNUM, '-', '') = replace(#{value}, '-', '')
+<!--       AND CLASSIFY = '00' -->
+  </select>
+  
+  <!-- 아이디 찾기 - ljk -->
+  <select id="selectfindUserId" resultType="String" parameterType="String">	   
+   SELECT USER_ID as user_id 
+     FROM ptl_user
+    WHERE SECSNAT = 'N'
+      AND replace(MBTLNUM, '-', '') = replace(#{mbtlnum}, '-', '') 
+      AND CLASSIFY = '00'
+  
+  
+  </select>
+  
+  
+  <!-- 비밀번호 찾기  -->
+  <select id="selectfindUserKey" resultType="String" parameterType="String">	   
+   SELECT EMPLYRKEY as emplyrkey 
+     FROM ptl_user
+    WHERE SECSNAT = 'N' 
+      AND replace(MBTLNUM, '-', '') = replace(#{mbtlnum}, '-', '')
+      AND CLASSIFY = '00'
+  </select>
+  
+<!-- login -->
+
+  <!-- 회원가입 시 핸드폰 중복체크에 사용 -->
+  <select id="selectMbtl" resultType="userVo" parameterType="String">
+  		/*selectMbtl*/
+		SELECT EMPLYRKEY
+			 , USER_ID AS loginid
+			 , NICKNM
+			 , PASSWORD 
+			 , SECSNAT
+			 , MBTLNUM
+			 , NICKNM
+			 , EMAIL
+		FROM ptl_user
+		WHERE MBTLNUM = #{mbtlnum}
+  </select>
+  
+  <!-- 회원가입 시 이메일 중복체크에 사용 -->
+  <select id="selectEmail" resultType="userVo" parameterType="String">
+  		/*selectEmail*/
+		SELECT EMPLYRKEY
+			 , USER_ID AS loginid
+			 , NICKNM
+			 , PASSWORD 
+			 , SECSNAT
+			 , MBTLNUM
+			 , NICKNM
+			 , EMAIL
+		FROM ptl_user
+		WHERE EMAIL = #{email}
+  </select>
+  
+  <!-- 사용자 권한 정보 조회 -->
+  <select id="selectUserAuthList" parameterType="String" resultType="String">
+    SELECT USER_AUTH_CD
+      FROM PTL_USER_AUTH_MNG
+     WHERE USER_ID = #{value}
+ 
+  </select>
+
+  <!-- 사용자 URL 접속 권한 목록 -->
+  <select id="selectUrlAuthList" resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ SELECT DISTINCT b.URL as url
+      , ROL_ID as role
+   FROM PTL_MENU_ROLT a
+      , PTL_URL_MNGT b
+  WHERE a.MENU_ID= b.MENU_ID
+    AND a.AUTH_GBN = b.AUTH_GBN
+    AND b.URL NOT  IN  (SELECT DISTINCT d.URL as url
+                          FROM PTL_MENU_ROLT c
+                             , PTL_URL_MNGT d
+                         WHERE c.MENU_ID= d.MENU_ID
+                           AND c.AUTH_GBN = d.AUTH_GBN
+                           AND c.ROL_ID = 'ROLE_GUEST' 
+                        )
+  ORDER BY URL
+  </select>
+  
+ 	<insert id="insertStatLogin" parameterType="String">	
+		<![CDATA[	
+			INSERT INTO PTL_STATS_LOGIN (EMPLYRKEY, USER_ID, USERNAME, LOGIN_DATE)
+		SELECT  EMPLYRKEY as  EMPLYRKEY
+             , USER_ID as USER_ID
+             , NICKNM as nicknm
+          	 , now()
+          FROM (SELECT a.EMPLYRKEY,
+		               a.USER_ID,
+		               a.NICKNM,
+		               a.PASSWORD AS PASSWORD,		               
+		               a.MBTLNUM,	           
+		               a.SECSNAT,		            		               
+		               a.REG_DATE,
+		               a.LASTUPDUSRKEY,
+		               a.LASTUPDDT,
+		               a.SECSNOPETRKEY,
+		               a.SECSNTREDT,		               		               
+		               a.MBTLNUM_YN,
+				         a.email AS EMAIL,		             		               
+		               a.SMSAGREE,
+		               a.EMAILAGREE,
+		               a.EMAIL AS USEREMAIL		              
+		         FROM ptl_user a
+		         WHERE a.SECSNAT = 'N'
+              ) d
+            WHERE 1=1
+              AND d.EMPLYRKEY = #{value}
+		]]>
+	</insert>			
+	
+	<delete id="deleteUser" parameterType="java.util.Map">
+	  UPDATE CRIS_EMPLYR SET
+			  MBTLNUM = null
+		    , TELNO = null
+		    , SECSNOPETRKEY = #{ui_idno}
+		    , SECSNTREDT = sysdate
+		    , SECSNAT='Y'
+		    , LASTUPDDT = sysdate 
+		    , LASTUPDUSRKEY = #{ui_idno}
+	  WHERE EMPLYRKEY = #{ui_idno}
+	</delete>
+  
+  
+  <update id="changePwd"  parameterType="java.util.Map">
+ 		UPDATE CRIS_EMPLYR SET
+				password = #{chg_userPw}, 
+		    LASTUPDDT = sysdate, 
+		    LASTUPDUSRKEY = #{chg_loginid}
+	  WHERE EMPLYRKEY = #{chg_loginid}
+  </update>
+  
+  
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.qna.dao.QnaMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	<select id="selectQnaList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	 /* selectQnaList */ 
+ 	 	<include refid="getPagingSelect"></include> 		
+	SELECT  A.QNA_ID
+	     ,  FN_GET_CODENM(a.QNA_TYPE) AS QNA_TYPE
+		 ,  A.QNA_TITLE
+		 ,  A.QNA_CONTENTS
+		 ,  A.QNA_ANSWER
+		 ,  date_format(A.ANSWER_DTTM,'%Y-%m-%d %H:%i') as ANSWER_DTTM
+		 ,  FN_USER_KEY_INFO(A.ANSWER_ID, 'NM') AS ANSWER_ID 
+		 ,  date_format(A.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		 ,  FN_USER_KEY_INFO(A.CREATE_ID, 'NM') AS CREATE_ID 
+		 ,  A.MODIFY_DTTM
+		 ,  A.MODIFY_ID
+	 FROM  PTL_QNA A  , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B    
+	 	WHERE 1=1 
+	 	  AND A.DEL_YN = 'N'	 	
+	 	<if test='searchword != "" ' >	 	 
+			<if test='searchopt == "pu_subject" ' >
+			 	AND A.QNA_TITLE like concat('%',#{searchword},'%')
+			</if>
+		</if>	
+		<if test='searchAnswer == "pu_wait"' >
+			 AND  (A.QNA_ANSWER IS NULL AND A.ANSWER_DTTM IS NULL)
+		</if>
+		<if test='searchAnswer == "pu_complete"'  >
+			 AND  A.QNA_ANSWER IS NOT NULL
+		</if>
+		ORDER BY A.QNA_ID DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<select id="selectQnaTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		FROM
+		    PTL_QNA
+		WHERE 1 = 1		
+		  AND DEL_YN = 'N'
+			<if test='searchword != "" ' >	 	 
+			<if test='searchopt == "pu_subject" ' >
+			 	AND QNA_TITLE like concat('%',#{searchword},'%')
+			</if>
+		</if>	
+		<if test='searchAnswer == "pu_wait"' >
+			 AND  (QNA_ANSWER IS NULL AND ANSWER_DTTM IS NULL)
+		</if>
+		<if test='searchAnswer == "pu_complete"'  >
+			 AND  QNA_ANSWER IS NOT NULL
+		</if>
+		
+	
+	</select>
+	
+	
+	<select id="selectQnaDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		SELECT  a.qna_id
+	    	 ,  FN_GET_CODENM(a.qna_type) AS qna_type
+	    	 ,  a.qna_TITLE
+			 ,	a.qna_contents	
+			 ,  a.atch_link_id	
+			 ,  a.qna_answer  
+			 ,  date_format(a.answer_dttm,'%Y-%m-%d') AS answer_dttm
+			 ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			 ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			 ,  a.answer_id
+			 ,  a.create_id
+			 ,  a.modify_id			  	
+	 	  FROM  PTL_QNA a 
+		 WHERE  1=1
+		   AND a.DEL_YN = 'N'
+		   AND a.qna_id =  #{qna_id, jdbcType=VARCHAR}
+	</select>	
+	
+	
+		<update id="updateQnaMng" parameterType="java.util.Map">
+		UPDATE PTL_QNA SET 
+			  QNA_ANSWER = #{qna_answer, jdbcType = VARCHAR}					
+			, ANSWER_DTTM = now()
+			, ANSWER_ID =  #{answer_id, jdbcType = VARCHAR}	
+		WHERE 1 = 1 
+			AND QNA_ID =  #{qna_id, jdbcType=VARCHAR}
+	</update>
+	
+	
+	<delete id="deleteQna" parameterType="java.util.Map">
+		UPDATE   PTL_QNA SET 
+			DEL_YN = 'Y'
+		 WHERE QNA_ID = #{qna_id, jdbcType=VARCHAR}
+	</delete>
+	
+</mapper>

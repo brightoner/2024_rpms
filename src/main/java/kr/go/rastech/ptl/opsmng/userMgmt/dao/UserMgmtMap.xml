@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.userMgmt.dao.UserMgmtDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 사용자 정보 리스트 -->
+	<select id="selectUserMgmtList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectUserMgmtList */ 	
+ 	 	 		<include refid="getPagingSelect"></include>
+	   SELECT  a.EMPLYRKEY 
+			,  a.USER_ID 
+			,  a.NICKNM
+			,  a.PASSWORD 
+			,  a.MBTLNUM 		
+			,  a.EMAIL	 
+			,  a.ORGNM		
+			,  a.DEPTNM		
+			,  a.POSNM		
+			,  a.SECSNOPETRKEY
+			,  a.SECSNTREDT
+			,  a.SECSNAT
+			,  a.LASTLOGINDT 
+			,  a.LASTLOGOUTDT 
+			,  a.LASTUPDDT
+			,  a.LASTUPDUSRKEY
+			,  date_format(a.REG_DATE,'%Y-%m-%d') as REG_DATE
+			,  a.AGREE 				  
+	     FROM  PTL_USER  a  , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B
+	   	WHERE  a.SECSNAT = 'N'	
+	
+			
+			<if test="searchword != null and searchword != ''">
+				<if test ="searchopt == 'nickNm'">
+					  AND a.NICKNM like concat('%',#{searchword},'%')
+				</if>
+				<if test ="searchopt == 'id'">
+					  AND a.USER_ID like concat('%',#{searchword},'%')
+				</if>
+			
+			</if>
+		order by EMPLYRKEY desc
+ 		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 사용자 정보 리스트 카운트 -->
+	<select id="selectUserMgmtTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		 SELECT COUNT(*) as cnt
+	       FROM PTL_USER a /* 사용자관리 */ 
+	 	  WHERE 1=1 
+	 	    AND a.SECSNAT = 'N'	
+	     
+			<if test="searchword != null and searchword != ''">
+				<if test ="searchopt == 'nickNm'">
+					  AND a.NICKNM like concat('%',#{searchword},'%')
+				</if>
+				<if test ="searchopt == 'id'">
+					  AND a.USER_ID like concat('%',#{searchword},'%')
+				</if>
+			
+			</if>
+	
+	</select>
+	
+	<!-- 사용자 정보 상세보기 -->
+	<select id="selectUserMgmtDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectUserMgmtDtl */
+	        SELECT  A.BJ_APPROVAL_ID
+				  , A.EMPLYRKEY
+				  , A.USER_ID
+				  , A.NICKNM
+				  , A.BC_CONTENTS
+				  , date_format(A.BC_SCHDL_DATE,'%Y-%m-%d') as BC_SCHDL_DATE
+				  , A.BC_CYCLE
+				  , A.BC_HISTORY
+				  , A.BC_ETC
+				  , date_format(A.BC_APPLY_DTTM,'%Y-%m-%d') as BC_APPLY_DTTM
+				  , A.BJ_AUTH
+				  , A.CONFIRM_COMMENT
+				  , date_format(A.CONFIRM_DTTM,'%Y-%m-%d') as CONFIRM_DTTM
+			   FROM ptl_bj_apprl A 
+	          WHERE A.BJ_APPROVAL_ID =  #{bj_approval_id}
+	</select>	
+
+		<!-- 사용자 정보 리스트 -->
+	<select id="selectUserSendMailList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectUserSendMailList */ 	
+ 	 	
+	   SELECT  a.EMPLYRKEY 
+			,  a.USER_ID 
+			,  a.NICKNM
+			,  a.PASSWORD 
+			,  a.MBTLNUM 			 
+		    ,  a.EMAIL
+			,  (CASE WHEN a.SMSAGREE = '1' THEN '동의' ELSE '미동의' END)  AS SMSAGREE
+			,  (CASE WHEN a.EMAILAGREE = '1' THEN '동의' ELSE '미동의' END)  AS EMAILAGREE	  		  
+	     FROM  PTL_USER  a 
+	   	WHERE  a.SECSNAT = 'N'	
+	   		<if test ="mailtemp_gbn == 'MAIL_04'"><!-- 광고성 -->
+			 	AND a.EMAILAGREE = '1'
+			</if>			
+	</select>
+	
+</mapper>

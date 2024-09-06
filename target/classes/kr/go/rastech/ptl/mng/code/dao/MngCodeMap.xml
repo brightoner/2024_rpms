@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.code.dao.MngCodeDao">
+ 
+<insert id="insertCdMng" parameterType="mngCodeVo">
+  INSERT INTO 
+       PTL_CD_MNG  /* 코드관리 */ 
+       ( 
+         UP_CD
+       , CD
+       , CD_NM
+       , CD_DESC
+       , CD_ORD
+       , REF_VAL1
+       , REF_VAL2
+       , REF_VAL3
+       , USE_YN
+       , CREATE_ID
+       , CREATE_DTTM
+    ) 
+VALUES 
+    ( 
+         #{up_cd, jdbcType = VARCHAR}    	/* 상위 공통 코드 */ 
+       , #{cd, jdbcType = VARCHAR}    		/* 공통 코드 */ 
+       , #{cd_nm, jdbcType = VARCHAR}    	/* 코드 명 */ 
+       , #{cd_desc, jdbcType = VARCHAR}    	/* 코드 설명 */ 
+       , #{cd_ord, jdbcType = VARCHAR}    	/* 코드 정렬 순서 */ 
+       , #{ref_val1, jdbcType = VARCHAR}    /* 참조 칼럼 1 내용 */ 
+       , #{ref_val2, jdbcType = VARCHAR}    /* 참조 칼럼 2 내용 */ 
+       , #{ref_val3, jdbcType = VARCHAR}    /* 참조 칼럼 3 내용 */ 
+       , #{use_yn, jdbcType = VARCHAR}  	/* 삭제여부 */ 
+       , #{create_id, jdbcType = VARCHAR}   /* 등록자 id */ 
+       , now()    	/* 등록일시 */ 
+    ) 
+</insert>
+ 
+<select id="selectCdMng" parameterType="mngCodeVo" resultType="mngCodeVo">
+SELECT a.*
+  FROM 
+   (
+ SELECT 
+          a.UP_CD as up_cd    /* 상위 공통 코드 */ 
+        , a.CD as cd   /* 공통 코드 */ 
+        , CASE WHEN a.UP_CD = 'PLATFORM' THEN '1' 
+               ELSE '2' END as cd_gbn
+        , CASE WHEN a.UP_CD = 'PLATFORM' THEN a.CD
+               ELSE a.UP_CD END as ord_cd
+        , a.CD_NM as cd_nm   /* 코드 명 */ 
+        , a.use_yn as use_yn
+        , a.CD_DESC as cd_desc   /* 코드 설명 */ 
+        , a.CD_ORD as cd_ord   /* 코드 정렬 순서 */ 
+        , a.REF_VAL1 as ref_val1   /* 참조 칼럼 1 내용 */ 
+        , a.REF_VAL2 as ref_val2   /* 참조 칼럼 2 내용 */ 
+        , a.REF_VAL3 as ref_val3   /* 참조 칼럼 3 내용 */
+        , a.CREATE_ID as create_id   /* 등록자 ID */ 
+        , a.CREATE_DTTM as create_dttm   /* 등록일시 */ 
+    FROM PTL_CD_MNG a /* 코드관리 */ 
+   WHERE 1=1 
+ 	<if test="up_cd != null and up_cd != ''">
+ 		AND UP_CD = #{up_cd, jdbcType = VARCHAR} 
+ 	</if>
+ 	<if test="cd != null and cd != ''">
+ 		AND CD = #{cd, jdbcType = VARCHAR} 
+ 	</if>
+ 	<if test="use_yn != null and use_yn != ''">
+ 		AND a.USE_YN = #{use_yn, jdbcType = VARCHAR} 
+ 	</if>
+ 	<if test="ref_val1 != null and ref_val1 != ''">
+ 		AND a.REF_VAL1 LIKE #{ref_val1, jdbcType = VARCHAR}||'%' 
+ 	</if>
+   ) a
+    , (SELECT ROW_NUMBER() OVER(ORDER BY a.CREATE_DTTM) as UP_ORD, a.CD FROM PTL_CD_MNG a WHERE a.UP_CD='PLATFORM' GROUP BY  a.CD) b
+WHERE a.ORD_CD = b.CD
+ORDER BY b.UP_ORD DESC,a.ORD_CD  ,cd_gbn, a.CD_ORD
+</select> 
+
+
+ 
+ <update id="updateCdMng" parameterType="mngCodeVo">
+   UPDATE 
+        PTL_CD_MNG  /* 코드관리 */ 
+	  SET 
+          CD_NM =  #{cd_nm, jdbcType = VARCHAR}    /* 코드 명 */ 
+        , CD_DESC =  #{cd_desc, jdbcType = VARCHAR}    /* 코드 설명 */ 
+        , CD_ORD =  #{cd_ord, jdbcType = VARCHAR}    /* 코드 정렬 순서 */ 
+        , REF_VAL1 =  #{ref_val1, jdbcType = VARCHAR}    /* 참조 칼럼 1 내용 */ 
+        , REF_VAL2 =  #{ref_val2, jdbcType = VARCHAR}    /* 참조 칼럼 2 내용 */ 
+        , REF_VAL3 =  #{ref_val3, jdbcType = VARCHAR}    /* 참조 칼럼 3 내용 */ 
+        , USE_YN =  #{use_yn, jdbcType = VARCHAR}    /* 삭제여부 */ 
+    WHERE 1=1 
+ 	<if test="up_cd != null and up_cd != ''">
+ 		AND UP_CD = #{up_cd, jdbcType = VARCHAR} 
+ 	</if>
+ 	<if test="cd != null and cd != ''">
+ 		AND CD = #{cd, jdbcType = VARCHAR} 
+ 	</if>
+ 
+ </update>
+ 
+ <delete id="deleteCdMng" parameterType="mngCodeVo">
+ 	DELETE FROM PTL_CD_MNG
+     WHERE CD= #{cd, jdbcType = VARCHAR}
+ </delete>
+ 
+ <select id="selectSearchnm" parameterType="String" resultType="String" >
+ 	SELECT CD_NM AS cd_nm 
+      FROM PTL_CD_MNG
+     WHERE CD = #{value}  
+ </select>
+ 
+ 
+ 
+</mapper>

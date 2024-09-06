@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.member.inform.dao.PtlInformDao">
+
+	
+	<select id="selectInformDetailCnt" parameterType="ptlUserRegVo" resultType="int">
+	/* selectInformDetailCnt */
+			<![CDATA[
+				SELECT count(*) totcnt
+				  FROM PTL_USER
+				 WHERE EMPLYRKEY=#{emplyrkey}
+			]]>
+	</select>
+	
+	
+	<!-- 회원가입여부 확인 -->
+	<select id="idDuplChk" parameterType="String" resultType="int">
+	/* idDuplChk */
+		SELECT COUNT(*)
+		  FROM PTL_USER
+		 WHERE USER_ID=#{user_id}
+		   AND SECSNAT = 'N'
+		
+	</select>
+	
+	<select id="selectInformDetail" parameterType="ptlUserRegVo" resultType="ptlUserRegVo">
+	/* selectInformDetail */
+			 SELECT EMPLYRKEY
+				  , USER_ID
+				  , NICKNM
+				  , PASSWORD
+				  , MBTLNUM
+				  , MBTLNUM_YN
+				  , EMAIL
+				  , ORGNM
+				  , DEPTNM
+				  , POSNM
+				  , CLASSIFY
+				  , SECSNOPETRKEY
+				  , SECSNTREDT
+				  , SECSNAT
+				  , LASTLOGINDT
+				  , LASTLOGOUTDT
+				  , LASTUPDDT
+				  , LASTUPDUSRKEY
+				  , date_format(REG_DATE,'%Y-%m-%d') as REG_DATE
+				  , AGREE
+				  , SMSAGREE
+				  , EMAILAGREE
+			   FROM PTL_USER
+		      WHERE EMPLYRKEY=#{emplyrkey}
+	</select>
+	
+	
+	<!-- 닉네임 수정 - ljk -->
+	<update id="updateNicknm" parameterType="ptlUserRegVo">
+	 /* updateNicknm */
+	 	<![CDATA[
+			UPDATE PTL_USER
+			SET    NICKNM=#{nicknm ,  jdbcType = VARCHAR}
+			WHERE  EMPLYRKEY=#{emplyrkey}
+				]]>
+	</update>
+	
+	
+	<!-- bj 승인신청 화면 > bj권한 여부 확인, 반려사유 -->
+	<select id="selectBjAuth" parameterType="PtlBjApprlVo" resultType="java.util.Map">
+		/* selectBjAuth */
+		 SELECT (CASE WHEN A.BJ_AUTH = 'Y' THEN 'Y'  
+					  WHEN A.BJ_AUTH = 'N' THEN 'N'
+					  WHEN A.BJ_AUTH = 'F' THEN 'F'
+					  ELSE 'P'
+				  END) AS BJ_AUTH
+		       ,A.CONFIRM_COMMENT
+		   FROM ptl_bj_apprl A
+			   WHERE A.EMPLYRKEY = #{emplyrkey}
+	</select>
+	
+	<!-- BJ 승인신청 insert : ptl_bj_apprl -->
+	<insert id="insertPtlBjApprl" parameterType="ptlBjApprlVo">
+		/*insertPtlBjApprl*/
+		INSERT INTO  PTL_BJ_APPRL (
+		             BJ_APPROVAL_ID
+		          ,  EMPLYRKEY
+		          ,  USER_ID
+		          ,  NICKNM
+		          ,  BC_CONTENTS
+		          ,  BC_SCHDL_DATE
+		          ,  BC_CYCLE
+		          ,  BC_HISTORY
+		          ,  BC_ETC
+		          ,  BC_APPLY_DTTM
+		          ,  BJ_AUTH
+		       ) VALUES (
+					 (SELECT NEXTVAL(ptl_bj_apprl_seq) FROM DUAL)
+		          ,  #{emplyrkey, jdbcType = VARCHAR}
+		          ,  #{user_id, jdbcType = VARCHAR}
+		          ,  #{nicknm, jdbcType = VARCHAR}
+		          ,  #{bc_contents, jdbcType = VARCHAR}
+		          ,  #{bc_schdl_date}
+		          ,  #{bc_cycle, jdbcType = VARCHAR}
+		          ,  #{bc_history, jdbcType = VARCHAR}
+		          ,  #{bc_etc, jdbcType = VARCHAR}
+		          ,  NOW()
+		          ,  #{bj_auth}
+		       )
+	</insert>
+	
+	<!-- BJ 승인신청 update -->
+	<update id="updatePtlBjApprl" parameterType="ptlBjApprlVo">
+	/* updatePtlBjApprl */ 
+		UPDATE  ptl_bj_apprl
+		   SET  NICKNM = #{nicknm, jdbcType = VARCHAR}
+		     ,  BC_CONTENTS = #{bc_contents, jdbcType = VARCHAR}
+		     ,  BC_SCHDL_DATE = #{bc_schdl_date}
+			 ,  BC_CYCLE = #{bc_cycle, jdbcType = VARCHAR}
+		     ,  BC_HISTORY = #{bc_history, jdbcType = VARCHAR}
+		     ,  BC_ETC	= #{bc_etc, jdbcType = VARCHAR}
+		     ,  BC_APPLY_DTTM = NOW()
+		     ,  BJ_AUTH = #{bj_auth}
+		     ,  CONFIRM_COMMENT = null
+		     ,  CONFIRM_DTTM = null
+		WHERE EMPLYRKEY = #{emplyrkey}
+	</update>
+	
+	
+	<!-- PASS 실명인증 (MBTLNUM_YN 수정) : bj승인신청, 병풍선구매, 19금 인증시 -->
+	<update id="passAuthentication" parameterType="java.util.Map">
+		/* passAuthentication */
+		UPDATE PTL_USER  SET 
+		    MBTLNUM_YN = 'Y'
+		   , BRTHDY = #{brthdy, jdbcType = VARCHAR}
+		   , USERNAME = #{username, jdbcType = VARCHAR}
+		 WHERE replace(MBTLNUM, '-', '') = REPLACE(#{mbtlnum}, '-', '')
+	</update>
+	
+	<!-- 비밀번호 수정 -->
+	<update id="updatePtlEmplyrPW" parameterType="ptlUserRegVo">
+		/* updatePtlEmplyrPW */
+		UPDATE PTL_USER
+		SET PASSWORD = #{password}
+		WHERE EMPLYRKEY = #{emplyrkey}
+	</update>	
+	
+	
+	<!-- 핸드폰번호 수정 -->
+	<update id="updatePtlEmplyrHp" parameterType="ptlUserRegVo">
+		/* updatePtlEmplyrHp */
+	 	<![CDATA[
+			UPDATE PTL_USER
+			SET  MBTLNUM=#{mbtlnum ,  jdbcType = VARCHAR}
+				WHERE EMPLYRKEY=#{emplyrkey}
+				]]>
+	</update>
+	
+	<!-- 이메일주소 수정 -->
+	<update id="updatePtlEmplyrEmail" parameterType="ptlUserRegVo">
+		/* updatePtlEmplyrEmail */
+	 	<![CDATA[
+			UPDATE PTL_USER
+			SET  EMAIL=#{email ,  jdbcType = VARCHAR}
+				WHERE EMPLYRKEY=#{emplyrkey}
+				]]>
+	</update>
+	
+	<!-- 광고성정보 수신여부 수정 -->
+	<update id="updateAgree" parameterType="ptlUserRegVo">
+	/* updateAgree*/
+	 	<![CDATA[
+			UPDATE PTL_USER
+			SET    EMAIL=#{email, jdbcType = VARCHAR}
+			      ,  MBTLNUM=#{mbtlnum, jdbcType = VARCHAR}
+			      ,  ORGNM=#{orgnm, jdbcType = VARCHAR}
+				  ,  DEPTNM=#{deptnm, jdbcType = VARCHAR}
+				  ,  POSNM=#{posnm, jdbcType = VARCHAR}
+			WHERE  EMPLYRKEY=#{emplyrkey}
+				]]>
+	</update>
+	 
+	<!-- 회원탈퇴 - PTL_USER 테이블 --> 
+	<delete id="deletePtlEmplyr" parameterType="ptlUserRegVo">
+	/* deletePtlEmplyr*/
+		<![CDATA[
+			UPDATE PTL_USER
+			SET PASSWORD=''
+				, BRTHDY=''
+				, USERNAME=''
+			    , MBTLNUM=''
+				, MBTLNUM_YN=''
+				, EMAIL=''
+				, CLASSIFY=''
+				, SECSNOPETRKEY=#{emplyrkey}
+				, SECSNTREDT=NOW()
+				, SECSNAT='Y'
+				, AGREE=''
+				, SMSAGREE=''
+				, EMAILAGREE=''
+				, LASTLOGOUTDT=NOW()
+				, LASTUPDDT=NOW()
+				, LASTUPDUSRKEY=#{emplyrkey}
+				WHERE EMPLYRKEY=#{emplyrkey}
+		]]>
+	</delete>
+	
+	
+	
+	
+</mapper>

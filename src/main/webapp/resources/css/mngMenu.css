@@ -1,0 +1,214 @@
+@import url(//cdn.rawgit.com/hiun/NanumSquare/master/nanumsquare.css);
+@import url(https://fonts.googleapis.com/earlyaccess/nanumgothic.css); 
+@import url(https://fonts.googleapis.com/earlyaccess/nanummyeongjo.css);
+@import url(https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/nanumsquare.css);
+
+#sidebar-left {
+    border: 1px solid #dfdfdf;
+    border-radius: 4px;
+}
+
+.sidebar-left1 {
+    width: 100%;
+    height: 100px;
+    text-align: center;
+}
+
+.sidebar-left-channel {
+    width: 100%;
+    height: auto;
+    background: #ffffff;
+    border-bottom: solid 1px #eee;
+    display: grid;
+    justify-content: center;
+    padding: 10px 0;
+    background-color: #fffcf7;
+}
+
+.sidebar-left-channel li{
+	text-align:center;
+	margin-top:10px;
+	margin-bottom:10px;
+	word-break:break-word;
+}
+
+.sub_left_div {
+    width: 100%;
+    margin: 0 auto;
+    background-repeat: no-repeat;
+    background-color: #e5e5f7;
+    opacity: 0.2;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.sidebar-left2 {
+    width: 100%;
+    position: relative;
+    margin: 10px 0 0;
+}
+
+.sub_left_text {
+    font-size: 20px;
+    color: #fff;
+    background: #314873;
+    height: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid #314873;
+    display: grid;
+    align-items: center;
+    font-weight: 500;
+    
+}
+
+.sub_left_ul {
+	list-style: none;
+	padding:0;
+	margin:0;
+	box-sizing: border-box;
+}
+
+.sub_left_ul>li {
+	text-align: left;
+	border-bottom: 1px solid #eee;
+}
+
+.sub_left_ul>li:last-child {
+	border-bottom: 0;
+}
+.sub_left_ul li a {
+    font-family: 'Noto Sans KR', sans-serif;
+    text-decoration: none;
+    display: block;
+    padding: 10px 5px 10px 12px;
+    letter-spacing: -0.6px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+.sub_left_ul>li .menuLvl1, .sub_left_ul>li .menuLvl2 {
+	font-weight:500;
+	color: #fff;
+}
+
+.sub_left_ul>li .menuLvl1 {
+	background: #314873;
+}
+
+.sub_left_ul>li .menuLvl2 {
+	background: #627aa7;
+}
+
+ul.sub_left_ul > li > a > span {
+	font-size:13px;
+} 
+
+/* 메뉴 스타일 */
+.sidebar-left2 > a {
+	font-size: 13px;
+	line-height: 34px;
+	padding: 0 10px;
+	cursor: pointer;
+	background: #f97e15;
+}
+/* 아이콘폰트 스타일 */
+#accordian h3 span {
+	font-size: 16px;
+	margin-right: 10px;
+}
+.sidebar-left2 li {
+	list-style-type: none; 
+}
+.sidebar-left2 li:last-child {
+    border-bottom: 0;
+}
+
+/* 서브메뉴 스타일 */
+.sidebar-left2 ul ul {
+	display: none;
+	box-sizing: border-box;
+	text-indent: 5px;
+	padding: 10px 0 10px 10px;
+	border-radius: 0 0 10px 10px;
+}
+
+.sidebar-left2 ul ul li a {
+	display: block;
+}
+
+.sidebar-left2 ul ul li:last-child>a {
+	border-bottom:0;
+}
+#lv3_2>li>a {
+	padding: 1px 0;
+	margin: 0 25px;
+	border-left:0;
+}
+
+ .sub_left_ul>li>ul {
+	background-color: #f9f9f9;
+}
+
+/* active 클래스 외에 것은 보이지 않게 하기 */
+
+ .sidebar-left2 li.active ul {
+	display: block;
+}
+
+#container-wrap > #content {
+    position: absolute;
+    left: 300px;
+    width: calc(100% - 315px);
+}
+
+.top_login a {
+    color: #704092;
+    font-size: 15px;
+    font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    padding-right : 10px;
+}
+
+#top_a1:hover {
+	cursor: default;
+	text-decoration: none;
+}
+#top_a2:hover {
+	text-decoration: underline;
+}
+
+.treeheader {
+    float: left;
+}
+
+div#sidetreecontrol {
+    float: left;
+    margin-top: 20px;
+}
+div#sidetreecontrol a {
+    float: right;
+    margin-left: 10px;
+}
+
+ul#tree {
+    clear: both;
+    padding-top: 40px;
+}
+
+/* 스크롤 스타일 설정 */
+body {
+	-ms-overflow-style: none;
+	overflow-x: hidden;
+}
+::-webkit-scrollbar {
+	width: 6px;
+}
+::-webkit-scrollbar-thumb {
+	background-color: #49494aa6;
+	border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+	background: #c5c5c51a;
+	
+}

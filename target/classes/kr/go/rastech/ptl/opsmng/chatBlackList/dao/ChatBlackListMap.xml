@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.chatBlackList.dao.ChatBlackListDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	<select id="selectChatBlackList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		 	<include refid="getPagingSelect"></include>
+			
+				SELECT  A.BL_ID as bl_id
+				     ,  (CASE WHEN A.BL_BAN_YN = 'X' THEN '방송 강퇴'
+				     		  WHEN A.BL_BAN_YN = 'C' THEN '채팅이용 금지' ELSE '구분없음' END )	as bl_ban_yn	     
+				     ,  A.BL_EMPLYRKEY as bl_emplyrkey
+				     ,  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'NM') AS ch_bl_nicknm
+				     ,  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'ID') AS ch_bl_userid				     
+				     ,  A.EMPLYRKEY  as emplyrkey
+				     ,  FN_USER_KEY_INFO(A.EMPLYRKEY, 'NM') AS ch_user_nicknm
+				     ,  FN_USER_KEY_INFO(A.EMPLYRKEY, 'ID') AS ch_user_id				    
+				     ,  date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+				     ,  FN_USER_KEY_INFO(A.create_id, 'NM') AS create_id  
+				  FROM  PTL_MAIN_CHAT_BLACKLIST A , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B
+				 WHERE  1=1  
+			<!-- 	   AND  A.emplyrkey = #{emplyrkey} -->
+			 	<if test="searchword != null and searchword !='' ">
+					<if test="searchopt == 'blacklist_id'">
+					   AND  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'ID') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+					</if>
+					<if test="searchopt == 'blacklist_nicknm'">
+					   AND  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'NM') COLLATE utf8mb4_general_ci  LIKE  CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+					</if>                      
+				</if>     
+				ORDER BY  a.BL_ID desc
+			<include refid="getPagingWhere"></include>
+	</select>
+	
+	<select id="selectChatBlackListTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		   FROM PTL_MAIN_CHAT_BLACKLIST
+		WHERE 1 = 1		
+	  <!--     AND emplyrkey = #{emplyrkey} -->
+		<if test="searchword != null and searchword !='' ">
+			<if test="searchopt == 'blacklist_id'">
+			   AND  FN_USER_KEY_INFO(BL_EMPLYRKEY, 'ID') COLLATE utf8mb4_general_ci LIKE  CONCAT('%' , #{searchword},'%') COLLATE utf8mb4_general_ci 
+			</if>
+			<if test="searchopt == 'blacklist_nicknm'">
+			   AND  FN_USER_KEY_INFO(BL_EMPLYRKEY, 'NM') COLLATE utf8mb4_general_ci LIKE CONCAT('%' , #{searchword} ,'%') COLLATE utf8mb4_general_ci 
+			</if>                      
+		</if>     
+	
+	</select>
+	
+	
+	<select id="selectMainChatBlackList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		 	<include refid="getPagingSelect"></include>
+			
+				SELECT  A.BL_ID as bl_id
+				     ,  (CASE WHEN A.BL_BAN_YN = 'X' THEN '방송 강퇴'
+				     		  WHEN A.BL_BAN_YN = 'C' THEN '채팅이용 금지' ELSE '구분없음' END )	as bl_ban_yn	     
+				     ,  A.BL_EMPLYRKEY as bl_emplyrkey
+				     ,  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'NM') AS bl_nicknm
+				     ,  FN_USER_KEY_INFO(A.BL_EMPLYRKEY, 'ID') AS bl_userid				     
+				     ,  A.EMPLYRKEY  as emplyrkey
+				     ,  FN_USER_KEY_INFO(A.EMPLYRKEY, 'NM') AS user_nicknm
+				     ,  FN_USER_KEY_INFO(A.EMPLYRKEY, 'ID') AS user_id				    
+				     ,  date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+				     ,  FN_USER_KEY_INFO(A.create_id, 'NM') AS create_id  
+				  FROM  PTL_MAIN_CHAT_BLACKLIST A , (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B
+				 WHERE  1=1  
+		<!-- 		   AND  A.emplyrkey = #{emplyrkey}			 --> 	
+				ORDER BY  a.BL_ID desc
+			<include refid="getPagingWhere"></include>
+	</select>
+	
+	<select id="selectMainChatBlackListTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		   FROM PTL_MAIN_CHAT_BLACKLIST
+		WHERE 1 = 1		
+	 <!--      AND emplyrkey = #{emplyrkey} -->
+
+	</select>
+	
+	
+	
+	<insert id="insertChatBlackList" parameterType="java.util.Map">
+	<selectKey keyProperty="bl_id" resultType="string" order="BEFORE">
+         SELECT CONCAT('BL_' , LPAD(NEXTVAL(PTL_MAIN_CHAT_BLACKLIST_seq),17,0 )) as bl_id FROM DUAL
+	    </selectKey>
+		INSERT INTO PTL_MAIN_CHAT_BLACKLIST(
+			  BL_ID
+			, BL_BAN_YN
+			, BL_EMPLYRKEY
+			, EMPLYRKEY
+			, CREATE_DTTM
+			, CREATE_ID
+		) VALUES (
+			   #{bl_id , jdbcType = VARCHAR}
+			,  #{bl_ban_yn, jdbcType = VARCHAR}
+			,   FN_USER_ID_INFO(  #{bl_userId , jdbcType = VARCHAR} , 'ID')				
+			,  #{emplyrkey, jdbcType = VARCHAR}			
+			,  now()
+			,  #{create_id, jdbcType = VARCHAR}
+		)
+	</insert>
+	
+	<update id="updateChatBlackList" parameterType="java.util.Map">
+		UPDATE  PTL_MAIN_CHAT_BLACKLIST SET
+   			BL_BAN_YN = #{bl_ban_yn, jdbcType=VARCHAR}
+   			, CREATE_DTTM = now()
+   			, CREATE_ID = #{create_id, jdbcType = VARCHAR}
+		WHERE BL_EMPLYRKEY = FN_USER_ID_INFO(  #{bl_userId , jdbcType = VARCHAR} , 'ID')	
+	<!-- 	  AND EMPLYRKEY = #{emplyrkey, jdbcType = VARCHAR}			 -->
+	</update>
+	
+	<delete id="deleteChatBlackList" parameterType="java.util.Map">
+		DELETE FROM   PTL_MAIN_CHAT_BLACKLIST  	
+		WHERE BL_ID = #{bl_id, jdbcType=VARCHAR}
+		<!--   AND EMPLYRKEY = #{emplyrkey, jdbcType = VARCHAR} -->			
+	</delete>
+	
+	
+	<select id="selectChatBlackListChkYn"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		 
+			
+			SELECT  A.BL_ID as bl_id
+			     ,  A.BL_BAN_YN as bl_ban_yn	     
+			     ,  A.BL_EMPLYRKEY as bl_emplyrkey				   			     
+			     ,  A.EMPLYRKEY  as emplyrkey				     			    
+			     ,  date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+			     ,  FN_USER_KEY_INFO(A.create_id, 'NM') AS create_id  
+			  FROM  PTL_MAIN_CHAT_BLACKLIST A
+			 WHERE  1=1  			
+			   AND  A.BL_EMPLYRKEY = #{bl_emplyrkey, jdbcType = VARCHAR}	
+	</select>
+	
+	
+	<select id="selectChatBlackListDupleUserChk"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		 
+		SELECT  A.BL_ID as bl_id
+			     ,  A.BL_BAN_YN as bl_ban_yn	     
+			     ,  A.BL_EMPLYRKEY as bl_emplyrkey				   			     
+			     ,  A.EMPLYRKEY  as emplyrkey				     			    
+			     ,  date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+			     ,  FN_USER_KEY_INFO(A.create_id, 'NM') AS create_id  
+			  FROM  PTL_MAIN_CHAT_BLACKLIST A
+			 WHERE  1=1  
+		<!-- 	   AND  A.emplyrkey = #{admin_id, jdbcType = VARCHAR} -->
+			   AND  A.BL_EMPLYRKEY = FN_USER_ID_INFO(#{bl_userId, jdbcType = VARCHAR} , 'ID')	
+	</select>
+	
+	
+</mapper>

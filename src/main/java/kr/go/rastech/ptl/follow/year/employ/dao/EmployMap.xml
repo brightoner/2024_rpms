@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.year.employ.dao.EmployDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연차사후관리 채용 list -->
+	<select id="selectYearEmployList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectYearEmployList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.YEAR_EMPLOY_ID
+			  , A.PROJ_YEAR_ID
+			  , DATE_FORMAT(A.YEAR_EMPLOY_DT,'%Y-%m-%d') AS YEAR_EMPLOY_DT
+			  , A.YEAR_EMPLOY_GB
+			  , A.YEAR_EMPLOY_YOUTH_GB
+			  , A.YEAR_EMPLOY_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , B.RESP_NM 
+			  , B.RESP_BIRTH 
+			  , B.RESP_ORG 
+			  , B.RESP_DEPT 
+			  , B.RESP_POSITION
+			  , B.RESP_EMAIL 
+			  , B.RESP_MBTLNUM 
+		  FROM  PTL_YEAR_FOLLOW_EMPLOY A
+	INNER JOIN  PTL_RESP_MNG B
+		    ON  A.YEAR_EMPLOY_CD  = B.RESP_ID 
+	INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+ 		 WHERE  1=1  
+ 		   AND  PROJ_YEAR_ID = #{proj_year_id}
+ 	  ORDER BY   B.RESP_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연차사후관리 채용 count -->
+	<select id="selectYearEmployListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectYearEmployListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_YEAR_FOLLOW_EMPLOY A
+	INNER JOIN  PTL_RESP_MNG B
+		    ON  A.YEAR_EMPLOY_CD  = B.RESP_ID 
+		 WHERE  1=1
+		   AND  PROJ_YEAR_ID = #{proj_year_id}
+	</select>
+	
+	
+	<!-- 연차사후관리 채용 상세보기 -->
+	<select id="selectYearEmployDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearEmployDtl */
+		SELECT  A.YEAR_EMPLOY_ID
+			  , A.PROJ_YEAR_ID
+			  , A.YEAR_EMPLOY_CD
+			  , DATE_FORMAT(A.YEAR_EMPLOY_DT,'%Y-%m-%d') AS YEAR_EMPLOY_DT
+			  , A.YEAR_EMPLOY_GB
+			  , A.YEAR_EMPLOY_YOUTH_GB
+			  , A.YEAR_EMPLOY_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , B.RESP_NM 
+			  , B.RESP_BIRTH 
+			  , B.RESP_ORG 
+			  , B.RESP_DEPT 
+			  , B.RESP_POSITION
+			  , B.RESP_EMAIL 
+			  , B.RESP_MBTLNUM 
+		 FROM  PTL_YEAR_FOLLOW_EMPLOY A
+   INNER JOIN  PTL_RESP_MNG B
+		   ON  A.YEAR_EMPLOY_CD  = B.RESP_ID 
+		WHERE  1=1
+		  AND  A.YEAR_EMPLOY_ID = #{year_employ_id} 
+	</select>	
+	
+	
+	<!-- 연차사후관리 채용자 등록 -->
+	<insert id="insertYearEmploy" parameterType="java.util.Map">
+	/* insertYearEmploy */
+		  INSERT INTO  PTL_YEAR_FOLLOW_EMPLOY (  
+					YEAR_EMPLOY_ID
+				  , PROJ_YEAR_ID
+				  , YEAR_EMPLOY_CD
+				  , YEAR_EMPLOY_DT
+				  , YEAR_EMPLOY_GB
+				  , YEAR_EMPLOY_YOUTH_GB
+				  , YEAR_EMPLOY_INFO
+				  , CREATE_ID
+				  , CREATE_DTTM
+			    ) VALUES (
+			        (SELECT CONCAT('EMPl_' , LPAD(NEXTVAL(PTL_YEAR_FOLLOW_EMPLOY_SEQ),15,0 )) FROM DUAL)	
+				  , #{proj_year_id_employ, jdbcType=VARCHAR}	
+				  , #{year_employ_cd, jdbcType=VARCHAR}	
+				  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					       ELSE DATE_FORMAT(STR_TO_DATE(#{year_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+					 END) 
+				  , #{year_employ_gb, jdbcType=VARCHAR}	
+				  , #{year_employ_youth_gb, jdbcType=VARCHAR}
+				  , #{year_employ_info, jdbcType=VARCHAR}
+				  , #{create_id, jdbcType=VARCHAR}
+				  , NOW()
+			    )
+			  ON DUPLICATE KEY UPDATE
+			  	    YEAR_EMPLOY_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									       ELSE DATE_FORMAT(STR_TO_DATE(#{year_employ_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+									 END)
+				  , YEAR_EMPLOY_GB	= #{year_employ_gb, jdbcType=VARCHAR}	
+				  , YEAR_EMPLOY_YOUTH_GB = #{year_employ_youth_gb, jdbcType=VARCHAR}
+				  , YEAR_EMPLOY_INFO = #{year_employ_info, jdbcType=VARCHAR}
+				  , MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+				  , MODIFY_DTTM	= now()
+    </insert>
+    
+    
+    <!-- 연차사후관리 채용자 삭제 -->
+	<delete id="deleteYearEmploy" parameterType="java.util.Map">
+	/* deleteYearEmploy */
+		DELETE
+		  FROM  PTL_YEAR_FOLLOW_EMPLOY
+		 WHERE  1=1
+		   AND  YEAR_EMPLOY_ID = #{year_employ_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

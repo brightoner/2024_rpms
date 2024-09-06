@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.user.dao.MngUserDao">
+ <sql id="getPagingSelect">
+    SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A, 
+		     (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B     
+	    LIMIT 20 OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+  
+  
+  <select id="selectUserList" resultType="ptlLoginVo" parameterType="java.util.Map">
+  		
+  		<include refid="getPagingSelect"></include>
+	   SELECT  a.EMPLYRKEY as emplyrkey
+			,  a.USER_ID as loginid
+			,  a.NICKNM as nicknm
+			,  a.PASSWORD as password
+			,  a.MBTLNUM as mbtlnum
+			,  a.MBTLNUM_YN as mbtlnumYn
+			,  a.CLASSIFY as classify
+			,  a.SECSNOPETRKEY as secsnopetrkey
+			,  a.SECSNTREDT as secsntredt
+			,  a.SECSNAT as secsnat
+			,  a.LASTLOGINDT as lastlogindt
+			,  a.LASTLOGOUTDT as lastlogoutdt
+			,  a.LASTUPDDT as lastupddt
+			,  a.LASTUPDUSRKEY as lastupdusrkey
+			,  a.REG_DATE as regDate
+			,  a.AGREE as agree
+			,  a.SMSAGREE  as smsAgree
+			,  a.EMAILAGREE  as emailAgree
+			,  a.EMAIL  as email
+			,  (select  GROUP_CONCAT(USER_AUTH_CD,',') FROM PTL_USER_AUTH_MNG WHERE USER_ID =a.USER_ID ) as usrAuth	  
+	     FROM  PTL_USER  a 
+	   	WHERE  a.SECSNAT = 'N'	
+			<if test="loginid != null and loginid != ''">
+				AND a.USER_ID = #{loginid}
+				</if>
+				<if test="usrAuth != null and usrAuth != ''">
+				 and exists (select  * FROM PTL_USER_AUTH_MNG WHERE USER_ID =a.USER_ID  AND USER_AUTH_CD = #{usrAuth} )
+				</if>
+				<if test="searchText != null and searchText != ''">
+				<if test ="searchStatus == 'name'">
+					  AND a.NICKNM like concat('%',#{searchText},'%')
+				</if>
+				<if test ="searchStatus == 'id'">
+					  AND a.USER_ID like concat('%',#{searchText},'%')
+				</if>
+				<if test ="searchStatus == 'sn'">
+					  AND a.EMPLYRKEY like concat('%',#{searchText},'%')
+				</if>
+			</if>
+			order by EMPLYRKEY desc
+ 		<include refid="getPagingWhere"></include>
+</select>
+  
+<select id="selectUserCnt" resultType="int" parameterType="java.util.Map">
+   SELECT COUNT(*) as cnt
+    FROM PTL_USER a /* 사용자관리 */ 
+ 	WHERE 1=1 
+ 	  AND a.SECSNAT = 'N'	
+        <if test="loginid != null and loginid != ''">
+            	AND a.USER_ID = #{loginid}
+	    </if>
+        <if test="usrAuth != null and usrAuth != ''">
+            and exists (select  * FROM PTL_USER_AUTH_MNG WHERE USER_ID =a.USER_ID  AND USER_AUTH_CD = #{usrAuth} )
+	    </if>
+	    <if test="searchText != null and searchText != ''">
+	    	<if test ="searchStatus == 'name'">
+	    		  AND a.NICKNM like concat('%',#{searchText},'%')
+   		    </if>
+   		    <if test ="searchStatus == 'id'">
+	    		  AND a.USER_ID like concat('%',#{searchText},'%')
+   		    </if>
+   		    <if test ="searchStatus == 'sn'">
+	    		  AND a.EMPLYRKEY like concat('%',#{searchText},'%')
+   		    </if>
+	   </if>
+</select>  
+  
+<delete id="deleteUserAuth" parameterType="String">
+	DELETE FROM PTL_USER_AUTH_MNG
+	WHERE 1=1
+	  AND USER_ID = #{value} 
+</delete>
+
+<!-- BJ 권한 회수, 부여X => bj 권한만 삭제 -->
+<delete id="deleteBjAuth" parameterType="mngUserAuthVo">
+/* deleteBjAuth */
+	DELETE FROM PTL_USER_AUTH_MNG
+	WHERE 1=1
+	  AND USER_ID = #{loginid} 
+	  AND USER_AUTH_CD = #{user_auth_cd}
+</delete>
+
+
+<insert id="insertUserAuth" parameterType="mngUserAuthVo">
+ INSERT INTO 
+        PTL_USER_AUTH_MNG  /* 사용자권한 */ 
+        ( 
+          USER_ID
+        , USER_AUTH_CD
+        , CREATE_ID
+        , CREATE_DTTM
+        , modify_id
+        , MODIFY_DTTM
+     ) 
+ VALUES 
+     ( 
+          #{loginid, jdbcType = VARCHAR}         /* 사용자id */ 
+        , #{user_auth_cd, jdbcType = VARCHAR}   /* 사용자권한 */ 
+<!--         , #{create_id, jdbcType = VARCHAR}    	 -->
+        , FN_USER_ID_INFO(#{create_id}, 'ID')  	
+        , now()     		/* null */ 
+<!--         , #{modify_id, jdbcType = VARCHAR}       -->
+        , FN_USER_ID_INFO(#{modify_id}, 'ID')  	
+        , now()     		/* null */ 
+     ) 
+</insert>
+
+<select id="selectUserAuth" parameterType="String" resultType="mngUserAuthVo"> 
+ SELECT 
+          a.user_id as loginid    /* 사용자ID */ 
+        , a.USER_AUTH_CD as user_auth_cd   /* 사용자권한 */ 
+        , a.CREATE_ID as create_id   /* 생성자 */ 
+        , a.CREATE_DTTM as create_dttm   /* 생성일자 */ 
+        , a.modify_id as modify_id   /* 수정자 */ 
+        , a.MODIFY_DTTM as MODIFY_DTTM   /* 수정일자 */ 
+    FROM PTL_USER_AUTH_MNG a  /* 사용자권 */ 
+ WHERE 1=1
+   AND a.USER_ID =#{value} 
+   
+</select>
+
+
+  <!-- 사용자 메일정보  -->
+  <select id="selectMngInfo" resultType="ptlLoginVo" parameterType="String">
+   SELECT 
+          a.loginid as loginid    /* 사용자ID */ 
+        , a.USER_NM_KOR as user_nm_kor   /* 이름 */ 
+        , a.CLPN1 as clpn1   /* 핸드폰1 */ 
+        , a.CLPN2 as clpn2   /* 핸드폰2 */ 
+        , a.CLPN3 as clpn3   /* 핸드폰3 */ 
+        , a.ETC_CLPN as etc_clpn   /* 국외번호 */ 
+        , a.EML as eml   /* 이메일 */ 
+    FROM USER_MNG a /* 사용자관리 */ 
+      ,  PTL_USER_AUTH_MNG b
+ WHERE 1=1 
+     AND a.loginid =b.loginid
+    <if test="value != null and value != ''">
+ 		AND b.USER_AUTH_CD = #{value} 
+ 	</if>
+ ORDER BY a.USER_NM_KOR
+  </select>
+  
+  <!-- 사용자 로그정보  -->
+  <select id="selectUserLogList" resultType="mngUserLogVo" parameterType="mngUserLogVo">
+ SELECT 
+          a.SEQ as seq    /* 순번 */ 
+        , TO_CHAR(a.LOG_DTTM,'YYYY-MM-DD HH24:MI:SS') as log_dttm   /* 회원정보에 접속한 일시 */ 
+        , ifnull(a.loginid,'system') as loginid   /* 회원정보에 접속한 회원id */ 
+        , a.LOG_IP as log_ip   /* 회원정보에 접근한 IP */ 
+        , a.USER_LOG_CONT as user_log_cont   /* 회원정보에 접속하여 실행한 행위 */ 
+        , ifnull(a.VIEW_loginid,'system') as view_loginid   /* 열람대상 회원ID */ 
+        , TO_CHAR(a.MDFY_DTTM,'YYYY-MM-DD HH24:MI:SS') as mdfy_dttm   /* 로그인하여 수정한 경우 수정일시 */ 
+    FROM USER_LOG a /* 사용자로그 */ 
+ WHERE 1 = 1
+ 	<if test="st_dt != null and st_dt != '' ">
+ 		AND TO_CHAR(a.MDFY_DTTM,'YYYYMMDD') BETWEEN REPLACE(#{st_dt},'-','') AND REPLACE(#{ed_dt},'-','')
+ 	</if>
+ 	<if test="user_nm != null and user_nm != '' ">
+ 		AND a.loginid LIKE '%'||#{user_nm}||'%'
+ 	</if>
+    ORDER BY seq DESC 
+  </select>
+  
+  <!-- 사용자 로그정보  엑셀다운로드용-->
+  <select id="selectUserLogMap" resultType="kr.go.rastech.commons.utils.LowerKeyMap" parameterType="mngUserLogVo">
+ SELECT 
+          a.SEQ as seq    /* 순번 */ 
+        , TO_CHAR(a.LOG_DTTM,'YYYY-MM-DD HH24:MI:SS') as log_dttm   /* 회원정보에 접속한 일시 */ 
+        , ifnull(a.loginid,'system') as loginid   /* 회원정보에 접속한 회원id */ 
+        , a.LOG_IP as log_ip   /* 회원정보에 접근한 IP */ 
+        , a.USER_LOG_CONT as user_log_cont   /* 회원정보에 접속하여 실행한 행위 */ 
+        , NVL(a.VIEW_loginid,'system') as view_loginid   /* 열람대상 회원ID */ 
+        , TO_CHAR(a.MDFY_DTTM,'YYYY-MM-DD HH24:MI:SS') as mdfy_dttm   /* 로그인하여 수정한 경우 수정일시 */ 
+    FROM USER_LOG a /* 사용자로그 */ 
+ WHERE 1 = 1
+ 	<if test="st_dt != null and st_dt != '' ">
+ 		AND TO_CHAR(a.MDFY_DTTM,'YYYYMMDD') BETWEEN REPLACE(#{st_dt},'-','') AND REPLACE(#{ed_dt},'-','')
+ 	</if>
+ 	<if test="user_nm != null and user_nm != '' ">
+ 		AND a.loginid LIKE '%'||#{user_nm}||'%'
+ 	</if>
+    ORDER BY seq DESC 
+  </select>
+  
+  <update id="updateChgPwd" parameterType="ptlLoginVo">
+  UPDATE USER_MNG  /* 사용자관리 */ 
+	 SET  USER_PWD =  ifnull(#{user_pwd, jdbcType=VARCHAR},USER_PWD)   /* 비밀번호*/ 
+        , modify_id  =   'system'    /* 수정자ID */ 
+        , MODIFY_DTTM =  now()    /* 수정일자 */ 
+ WHERE 1=1 
+   AND loginid = #{loginid} 
+  </update>
+  
+
+</mapper>

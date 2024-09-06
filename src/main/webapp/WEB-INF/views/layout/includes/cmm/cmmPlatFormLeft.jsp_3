@@ -1,0 +1,302 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
+
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.security.SecureRandom" %>
+<%@ page import="java.math.BigInteger" %>
+
+
+ <script type="text/javascript">
+ 
+ //window.history.forward();
+
+ 
+
+ 
+ $(function() {
+	console.log('${result}');
+	console.log('${message}');
+	
+     if('${result}' == 'false'){
+       $("#loginid").focus();
+       //$("#loginid").val('${loginid}');
+       
+       $(".loginFail").html('${message}');
+       fn_alert('${message}');
+       
+     }else if('${result}' == 'true'){
+       location.href='${ctxt}/';
+     }else{    	  
+       var form = document.form;
+       
+       $("#loginid").focus();
+     }
+     
+     
+     // ajax로 포인트, 아이템 부를때 사용 (commonPlatform.js)
+//     if('${userVo}' != null || '${userVo}' != ''){
+//     	 fn_totalItemPoint();
+//      }
+     
+     
+     
+     
+     
+     
+ });
+ 
+ function fncLogin(){
+     var form = document.form;
+
+     if ($("#loginid").val() == '') {
+       fn_alert('아이디를 입력하세요.','c');
+       $("#loginid").focus();
+       return;
+     }
+
+     if($("#password").val() == ""){
+        fn_alert("비밀번호를 입력하세요.",'c');
+        $("#password").focus();
+        return;
+     }
+
+     var frmObj = $('<form action="${ctxt}/login/loginProcess.do" method="post"></form>');
+ 
+   	frmObj.append('<input type="hidden" name="loginid" value="' + $('#loginid').val() + '"/>');
+	frmObj.append('<input type="hidden" name="password" value="' + $('#password').val() + '"/>');
+
+    frmObj.append('<input type="hidden" name="returnURL" value="${param.returnURL}"/>');
+    frmObj.append('<input type="hidden" name="returnUrl" value="${returnURL}"/>');
+    frmObj.appendTo('body');
+    frmObj.submit();
+    
+  
+   }
+ 
+ function searchPopup(param){ // ID/PW 찾기
+	
+ 	if(param == "paramid"){
+ 		location.href="${ctxt}/login/user/findId.do";	
+ 	}else{
+ 		location.href="${ctxt}/login/user/findPw.do";
+ 		
+ 	}
+ }
+
+ 
+ 
+ 
+//********** 2023 ljk - kakao 소셜 로그인 ******************
+	//SDK 초기화
+	Kakao.init('55b9dabf03a8e9634d46bd14294f2a32'); // 사용하려는 앱의 JavaScript 키 입력
+
+	// 카카오 로그인 
+	  function fn_kakaoLogin(){
+			Kakao.Auth.login({
+		      success: function (response) {
+		        Kakao.API.request({
+		          url: '/v2/user/me',
+		          success: function (response) {
+		        	  console.log("nickname : " +response.kakao_account.profile.nickname);
+		        	  var userId = "K_"+response.id;
+		        	  
+		        	  var params = {};
+		        	  params.userId = userId;
+		        	  
+		        	  // 카카오로그인 or 카카오회원가입 처리 부분
+		        	 $.ajax({
+		  				url : '${ctxt}/member/regi/idDuplChkBySocial.do',
+		  				data : params,   //전송파라미터
+		  				type : 'POST',
+		  				dataType: 'text',
+		  	   			cache: false,
+		  				success : function(result) {
+		  					 if(result == "Y"){			// 신규회원이면  					
+		  						 //fn_alert("회원 가입이 완료되었습니다. 다시 소셜 로그인을 클릭해 주세요.");
+			  					 var frmObj = $('<form action="${ctxt}/member/regi/writeMemberBySocial.do" method="post"></form>');
+		  						 frmObj.append('<input type="hidden" name="user_id" value="' + userId + '"/>');
+		  						 frmObj.appendTo('body');
+		  						 frmObj.submit();
+		  					  }else if(result =="N"){	 // 이미 가입되어있으면 로그인 처리
+		  						 var frmObj = $('<form action="${ctxt}/login/loginProcess.do" method="post"></form>');
+		  						 frmObj.append('<input type="hidden" name="loginid" value="' + userId + '"/>');
+		  						 frmObj.append('<input type="hidden" name="returnURL" value="${param.returnURL}"/>');
+		  						 frmObj.append('<input type="hidden" name="returnUrl" value="${returnURL}"/>');
+		  						 frmObj.appendTo('body');
+		  						 frmObj.submit();
+		  					  }else if(result =="F"){ 					  
+		  						 fn_alert("회원가입이 실패하였습니다."); 					  
+		  					  }
+		  				},
+		  				error : function() { // Ajax 전송 에러 발생시 실행
+		  					fn_alert('오류가 발생했습니다.<br /> 관리자에게 문의 바랍니다.','e');
+		  				}
+		  			});
+		        	  
+		        	  
+		          },
+		          fail: function (error) {
+		            console.log(error);
+		          },
+		        })
+		      },
+		      fail: function (error) {
+		        console.log(error)
+		      },
+		    })
+		  }
+
+	//카카오로그아웃  
+	 /* function kakaoLogout() {
+	      if (Kakao.Auth.getAccessToken()) {
+	        Kakao.API.request({
+	          url: '/v1/user/unlink',
+	          success: function (response) {
+	          	console.log(response)
+	          },
+	          fail: function (error) {
+	            console.log(error)
+	          },
+	        })
+	        Kakao.Auth.setAccessToken(undefined)
+	      }
+	    } */
+//********** 2023 ljk - kakao 소셜 로그인 끝******************
+
+
+//********** 2023 ljk - naver 소셜 로그인 ******************
+	
+	<%
+    String clientId = "YOUR_CLIENT_ID";//애플리케이션 클라이언트 아이디값";
+    String redirectURI = URLEncoder.encode("YOUR_CALLBACK_URL", "UTF-8");
+    SecureRandom random = new SecureRandom();
+    String state = new BigInteger(130, random).toString();
+    String apiURL = "https://nid.naver.com/oauth2.0/authorize?response_type=code";
+    apiURL += "&client_id=" + clientId;
+    apiURL += "&redirect_uri=" + redirectURI;
+    apiURL += "&state=" + state;
+    session.setAttribute("state", state);
+ %>
+	
+	
+
+//********** 2023 ljk - naver 소셜 로그인 끝******************
+
+
+
+ </script>
+ 
+
+
+<!--로그인, 채팅 영역 -->
+
+	<!-- 로그인 -->
+	<div class="card mb-4">
+	<!-- 
+		<div class="card-header">로그인</div> -->
+		<div class="card-body">
+			<div class="row">
+				<div class="col-sm-6">
+					<form id="form" name="form" action="${ctxt}/login/loginProcess.do" method="post">
+						<div class="logIn">	
+							<div class="border_box">
+								   <c:choose>
+					                	<c:when test="${userVo eq null}">
+				                				<p class="clear">
+													<label class="float" for="loginid"><i class="fas fa-id-card-alt" aria-hidden="true"></i> ID</label>
+													<input class="float" type="text" id="loginid" name="loginid" title="로그인 아이디" onkeydown="javascript:if(event.keyCode==13){fncLogin();}" placeholder="아이디">
+												</p>
+												<p class="clear">
+													<label class="float" for="password"><i class="fas fa-unlock-alt" aria-hidden="true"></i>PW</label>
+													<input class="float" type="password" id="password" name="password" autocomplete="off" title="로그인  비밀번호" onkeydown="javascript:if(event.keyCode==13){fncLogin();}" placeholder="패스워드">
+												</p>						
+												<div class="text_c">
+													<button type="button" class="button btn2" onclick="fncLogin()" title="로그인 버튼">로그인</button>
+													<%-- <a href="${ctxt}/resources/images/log_1.png" target="_blank"><button type="button"  class="button btn2">공인인증서 로그인</button></a> --%>
+												</div>								
+												<p class="text_c row20">
+													<a href="${ctxt}/login/user/writeMember.do" role="button" class="font_Dgray" title="회원가입">회원가입</a>
+													<span class="barVertical"></span>
+													<a href="javascript:void(0);" onclick="searchPopup('paramid');" role="button" class="font_Dgray" title="아이디 찾기">아이디 찾기</a>
+													<span class="barVertical"></span>
+													<a href="javascript:void(0);" onclick="searchPopup('paramsec');" role="button" class="font_Dgray" title="비밀번호 찾기">비밀번호 찾기</a>
+												</p>
+ 												<p class="social_box">
+ 												<a id="naverIdLogin_loginButton" href="javascript:fn_naverLogin()">
+													<img src='${ctxt}/resources/images/main/ic_naver.png' class="social">네이버 로그인
+												</a>
+ 												</p>
+												
+												<p class="social_box">
+													<a id="kakao-login-btn" href="javascript:fn_kakaoLogin()">
+														<img src='${ctxt}/resources/images/main/ic_kakao.png' class="social">카카오 로그인
+													</a>
+												</p>												
+												<div class="loginFail bor_0 pa_0 ma_0"></div>
+					                	</c:when>
+					                	<c:otherwise>
+					                	<p class="profile"></p>
+					                	<p class="text_c">
+					                		
+										    <a href="javascript:popOpen('logininfo');" role="button" style="font-weight: 700; color: #f97e15;" title="정보"><c:out value="${userVo.nicknm}"/>님</a>
+
+										    
+										</p>
+										        <div class="loginfo" id="logininfo" style="display: none;"><strong><c:out value="${userVo.nicknm}"/>님</strong>
+										          	<c:if test = "${fn:length(sys_popMenu) ne 0  }" >
+			            								<c:forEach var="popMenuVo" items="${sys_popMenu}" varStatus="status">
+			            									<div><p><a href="${ctxt}<c:out value='${popMenuVo.url}'/>"> <c:out value="${popMenuVo.menuNm}"/></a></p></div>
+			            								</c:forEach>
+		            								
+		            								</c:if>											       
+											        <div><p><a class="userTooltip" href="${ctxt}/login/logout.do" id="top_a3" title="로그아웃 하기" onblur="javascript:logoutTabOff();"><span>LOGOUT</span></a></p></div>
+												        <span class="arrw"></span>
+												        <p class="text_c">
+												            <a href="javascript:void(0);" onclick="popClose('logininfo');" role="button" class="button" title="닫기 버튼">close</a>
+												        </p>
+										    	</div>
+
+									    	
+									    	<%-- <a href="${ctxt}/member/infoChI/infoMember.do" id="top_a4">My ncmiklib</a> --%>									    	
+									    	
+									    
+											<div id="totalCntDiv">
+<!-- 												<p class="text_c">보유한 별풍선 : <span id="itemId">0</span> </p> -->
+<!-- 												<p class="text_c">보유한 포인트 : <span id="pointId">0</span> </p> -->
+												<p class="text_c">보유한 별풍선 : <span id="itemId">${totalItem}</span> </p>
+												<p class="text_c">보유한 포인트 : <span id="pointId">${totalPoint}</span> </p>
+											</div>
+											<p class="text_c">
+											<a href="${ctxt}/item/charge/itemCharge.do" class="button">별풍선 충전</a>
+											<a href="${ctxt}/point/charge/pointCharge.do" class="button">포인트 충전</a>
+											</p>
+											
+									
+					                	</c:otherwise>
+				                	</c:choose>
+							</div>
+						</div>
+					</form>					
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 탭 -->
+
+	<!-- 실시간 채팅 -->
+	<div id="tab1" class="tabcontent" style="display: block;">
+		<div class="card2">
+			<div class="chat-body">
+				<!-- <iframe src='http://localhost:8081/chat/mainChatRoom.do'
+					frameborder='no' scrolling='no' marginwidth='0' marginheight='0'
+					width='100%' height='650'></iframe> -->
+				 	 <%@include file="./cmmChatRoom.jsp"%> 
+			</div>
+		</div>
+	</div>
+

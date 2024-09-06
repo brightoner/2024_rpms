@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:task="http://www.springframework.org/schema/task"
+  xmlns:beans="http://www.springframework.org/schema/beans"
+  xsi:schemaLocation="http://www.springframework.org/schema/task 
+    http://www.springframework.org/schema/task/spring-task-4.0.xsd
+    http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd">   
+
+  <!-- Service, Repository Scan - Servlet Context에 대한 우선권을 가지기 위함 -->
+  <!-- @Controller 어노테이션이 붙은 클래스만 스캔하도록 지정. Spring MVC 컨트롤러를 자동으로 감지하고 빈으로 등록 -->
+  <context:component-scan base-package="kr.go.rastech">
+    <context:include-filter expression="org.springframework.stereotype.Controller" type="annotation" />
+  </context:component-scan> 
+
+   
+  <!-- @Scheduled (스케줄링) 및 @Async (비동기 실행) 어노테이션을 활성화하여 관련 메서드를 자동으로 관리하고 실행할 수 있도록 설정-->
+  <task:annotation-driven/>
+  
+  
+  <!-- Root Context: defines shared resources visible to all other web components -->
+  <import resource="context/dataAccess-context.xml"/>
+  <import resource="context/security-context.xml"/>
+
+
+  <!-- message source : 다국어 지원을 위한 메시지 소스 설정 -->
+  <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+ <property name="defaultEncoding" value="UTF-8"/> <!-- 이렇게 해놓고 properties파일을 UTF-8형식으로 사용하면 한글이 유니코드로 변환되지 않고 정상적으로 로드됨-->
+     <property name="basenames">
+         <list>
+          <value>classpath:messages</value>  <!-- message.properties 파일이 있는 경로를 넣어준다.(locale에 따라 자동으로 _ko, _en 파일을 로드한-->
+         </list>
+     </property>
+     <property name="fallbackToSystemLocale" value="false"/>   <!-- 'fallbackToSystemLocale' property가 true인 경우, locale에 해당하는 file이 없을 경우 system locale을 사용-->
+     <property name="cacheSeconds" value="5"/> <!-- 5초마다 업데이트 된 properties 파일을 새로 로드함-->
+ </bean>
+  <bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+     <property name="defaultLocale" value="ko" />  <!--  세션에 locale 정보가 없을 경우 기본 언어 -->
+ </bean>
+ 
+ 
+ <!-- 실행환경에서 빈 이름 참조(AbstractServiceImpl) -->
+ <!-- 로그 추적 기능 -->
+	<bean id="leaveaTrace" class="egovframework.rte.fdl.cmmn.trace.LeaveaTrace">
+		<property name="traceHandlerServices">
+			<list>
+				<ref bean="egov.traceHandlerService" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="egov.traceHandlerService" class="egovframework.rte.fdl.cmmn.trace.manager.DefaultTraceHandleManager">
+		<property name="reqExpMatcher">
+			<ref bean="egov.antPathMater" />
+		</property>
+		<property name="patterns">
+			<list>
+				<value>*</value>
+			</list>
+		</property>
+		<property name="handlers">
+			<list>
+				<ref bean="egov.defaultTraceHandler" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="egov.antPathMater" class="org.springframework.util.AntPathMatcher" />
+	<bean id="egov.defaultTraceHandler" class="egovframework.rte.fdl.cmmn.trace.handler.DefaultTraceHandler" />
+ 
+ 
+	<!-- 프로퍼티 파일 설정 -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location">
+            <value>classpath:/platFormProps/globals.properties</value>
+        </property>
+    </bean>
+    
+ 
+</beans>

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.opsmng.respMng.dao.RespMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 책임자 리스트 -->
+	<select id="selectRespMngList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectRespMngList */ 	
+ 	 	<include refid="getPagingSelect"></include>
+		 SELECT A.resp_id
+		      , A.resp_nm
+		      , CASE WHEN A.resp_birth != '' and A.resp_birth is not null  THEN DATE_FORMAT(STR_TO_DATE(A.resp_birth, '%Y%m%d'), '%Y-%m-%d') ELSE '' END  AS resp_birth
+			  , A.resp_srch_no
+			  , A.resp_phone
+			  , A.resp_fax
+			  , A.resp_etc
+			  , A.resp_affil
+		      , A.resp_dept
+		      , A.resp_org
+		      , A.resp_position
+		      , A.resp_email
+		      , A.del_yn	
+		      , A.resp_degree
+			  , A.resp_sex
+			  , A.resp_special1
+			  , A.resp_special2
+			  , A.resp_special3	   
+		      , A.resp_mbtlnum
+		      , A.resp_expert_gbn
+		      , A.resp_major
+		      , A.resp_school
+		      , A.resp_major_nm
+			  , A.resp_quit_dt
+			  , A.resp_join_dt
+		      , date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+		      , date_format(A.modify_dttm,'%Y-%m-%d') AS modify_dttm
+		      , create_id
+		      , modify_id		     
+		   FROM PTL_RESP_MNG  A,  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B   
+		  WHERE 1=1  
+		    AND A.DEL_YN = 'N'	
+	<if test='searchword != "" and searchword != null ' >
+		<if test='searchopt == "resp_nm" ' >
+	    		AND replace(A.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+		</if>
+		<if test='searchopt == "resp_org" ' >
+    		AND replace(A.resp_org , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+		</if>
+		<if test='searchopt == "resp_dept" ' >
+    		AND replace(A.resp_dept , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+		</if>
+		<if test='searchopt == "resp_position" ' >
+    		AND replace(A.resp_position , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+		</if>
+	
+	</if>
+	<if test='respMenuGbn != "" and respMenuGbn != null ' >
+	       AND A.resp_expert_gbn = 'Y'
+	</if>
+		ORDER BY A.resp_id DESC
+  	
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 책임자 리스트 카운트 -->
+	<select id="selectRespMngTotalCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectRespMngTotalCount */
+		SELECT COUNT(*)
+		   FROM PTL_RESP_MNG A
+		  WHERE 1=1
+		AND A.DEL_YN = 'N'
+		<if test='searchword != "" and searchword != null ' >
+			<if test='searchopt == "resp_nm" ' >
+	    		AND replace(A.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			</if>
+			<if test='searchopt == "resp_org" ' >
+	    		AND replace(A.resp_org , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			</if>
+			<if test='searchopt == "resp_dept" ' >
+	    		AND replace(A.resp_dept , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			</if>
+			<if test='searchopt == "resp_position" ' >
+	    		AND replace(A.resp_position , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+			</if>
+		
+		</if>
+		<if test='respMenuGbn != "" and respMenuGbn != null ' >
+	    	   AND A.resp_expert_gbn = 'Y'
+		</if>
+	
+	</select>
+	
+	
+	
+	
+	<!-- 책임자 상세보기 -->
+	<select id="selectRespMngDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectRespMngDtl */
+	     SELECT A.resp_id
+		      , A.resp_nm
+		     , CASE WHEN  A.resp_birth != '' and A.resp_birth is not null  THEN DATE_FORMAT(STR_TO_DATE(A.resp_birth, '%Y%m%d'), '%Y-%m-%d') ELSE '' END  AS resp_birth
+		      , A.resp_dept
+              , A.resp_org
+		      , A.resp_position
+		      , A.resp_email
+		      , A.resp_mbtlnum
+			  , A.resp_srch_no
+			  , A.resp_phone
+			  , A.resp_fax
+			  , A.resp_etc
+			  , A.resp_affil
+			  , A.resp_degree
+			  , A.resp_sex
+			  , A.resp_special1
+			  , A.resp_special2
+			  , A.resp_special3	   
+		      , A.resp_expert_gbn
+		      , A.resp_major
+		      , A.resp_school
+		      , A.resp_major_nm	
+			  , CASE WHEN  A.resp_quit_dt != '' and A.resp_quit_dt is not null  THEN DATE_FORMAT(STR_TO_DATE(A.resp_quit_dt, '%Y%m%d'), '%Y-%m-%d') ELSE '' END  AS resp_quit_dt
+			  , CASE WHEN  A.resp_join_dt != '' and A.resp_join_dt is not null  THEN DATE_FORMAT(STR_TO_DATE(A.resp_join_dt, '%Y%m%d'), '%Y-%m-%d') ELSE '' END  AS resp_join_dt	 
+		  	  , (select t.tcls_nm from rpms.PTL_TECH_CLS_CODE t where A.resp_special1 =  t.tcls_id ) as resp_special1_nm
+			  , (select t.tcls_nm from rpms.PTL_TECH_CLS_CODE t where A.resp_special2=  t.tcls_id ) as resp_special2_nm
+			  , (select t.tcls_nm from rpms.PTL_TECH_CLS_CODE t where A.resp_special3 =  t.tcls_id ) as resp_special3_nm
+		      , A.del_yn		   
+		      , date_format(A.create_dttm,'%Y-%m-%d') AS create_dttm
+		      , date_format(A.modify_dttm,'%Y-%m-%d') AS modify_dttm		    		      
+		      , FN_USER_KEY_INFO(A.CREATE_ID , 'ID') AS create_id
+		      , FN_USER_KEY_INFO(A.MODIFY_ID , 'ID') AS modify_id		     
+	       FROM PTL_RESP_MNG A 
+	      WHERE A.resp_id =  #{resp_id}
+	</select>	
+	
+	<!-- 책임자 update -->
+	<update id="updateRespMng" parameterType="java.util.Map">
+	/* updateRespMngMng */
+		 UPDATE PTL_RESP_MNG
+		    SET resp_nm = #{resp_nm,  jdbcType = VARCHAR}
+		   	  , resp_birth = replace(#{resp_birth, jdbcType = VARCHAR}, '-', '')
+		   	  , resp_dept = #{resp_dept, jdbcType = VARCHAR}
+		   	  , resp_org = #{resp_org, jdbcType = VARCHAR}
+		   	  , resp_position = #{resp_position, jdbcType = VARCHAR}
+		   	  , resp_email = #{resp_email, jdbcType = VARCHAR}
+		   	  , resp_mbtlnum  = #{resp_mbtlnum, jdbcType = VARCHAR} 
+			  , resp_srch_no = #{resp_srch_no, jdbcType = VARCHAR}
+			  , resp_phone = #{resp_phone, jdbcType = VARCHAR}
+			  , resp_fax = #{resp_fax, jdbcType = VARCHAR}
+			  , resp_etc = #{resp_etc, jdbcType = VARCHAR}
+			  , resp_affil = #{resp_affil, jdbcType = VARCHAR}
+			  , resp_degree = #{resp_degree, jdbcType = VARCHAR}
+			  , resp_sex = #{resp_sex, jdbcType = VARCHAR}
+			  , resp_special1 = #{resp_special1, jdbcType = VARCHAR}
+			  , resp_special2 = #{resp_special2, jdbcType = VARCHAR}
+			  , resp_special3 = #{resp_special3, jdbcType = VARCHAR}
+			  , resp_expert_gbn = #{resp_expert_gbn , jdbcType = VARCHAR}
+		      , resp_major = #{resp_major, jdbcType = VARCHAR}
+		      , resp_school = #{resp_school, jdbcType = VARCHAR}
+		      , resp_major_nm = #{resp_major_nm, jdbcType = VARCHAR}
+			  , resp_quit_dt = replace(#{resp_quit_dt, jdbcType = VARCHAR}, '-', '')
+			  , resp_join_dt = replace(#{resp_join_dt, jdbcType = VARCHAR}, '-', '')
+		      , modify_dttm = NOW()
+		      , modify_id = #{modify_id, jdbcType = VARCHAR}
+		  WHERE 1=1
+		    AND resp_id = #{resp_id}
+	</update>
+	
+	<!-- 책임자 update -->
+	<insert id="insertRespMng" parameterType="java.util.Map">
+	/* insertRespMngMng */
+		<selectKey keyProperty="resp_id" resultType="string" order="BEFORE">
+       SELECT CONCAT('RESP_' , LPAD(NEXTVAL(PTL_RESP_MNG_SEQ),15,0 )) FROM DUAL
+	    </selectKey>
+		 
+		 INSERT INTO PTL_RESP_MNG 
+		 (
+		 	  RESP_ID 
+		 	, RESP_NM
+		 	, RESP_BIRTH
+		 	, RESP_ORG
+		 	, RESP_DEPT
+		 	, RESP_POSITION
+		 	, RESP_EMAIL
+			, RESP_MBTLNUM
+			, RESP_SRCH_NO
+			, RESP_PHONE
+			, RESP_FAX
+			, RESP_ETC
+			, RESP_AFFIL	
+			, RESP_DEGREE
+			, RESP_SEX
+			, RESP_SPECIAL1
+			, RESP_SPECIAL2
+			, RESP_SPECIAL3	 	
+			, RESP_EXPERT_GBN	 	
+			, RESP_MAJOR	
+			, RESP_SCHOOL	
+			, RESP_MAJOR_NM
+			, RESP_QUIT_DT
+			, RESP_JOIN_DT 	
+		 	, DEL_YN
+		 	, CREATE_DTTM
+		 	, CREATE_ID		 
+		 ) VALUES (
+		 		#{resp_id}
+			 , #{resp_nm,  jdbcType = VARCHAR}
+			 ,  replace(#{resp_birth, jdbcType = VARCHAR}, '-', '')
+			 , #{resp_org,  jdbcType = VARCHAR}
+			 , #{resp_dept,  jdbcType = VARCHAR}
+			 , #{resp_position,  jdbcType = VARCHAR}
+			 , #{resp_email,  jdbcType = VARCHAR}
+			 , #{resp_mbtlnum, jdbcType = VARCHAR} 
+		 	 , #{resp_srch_no, jdbcType = VARCHAR}
+			 , #{resp_phone, jdbcType = VARCHAR}
+			 , #{resp_fax, jdbcType = VARCHAR}
+			 , #{resp_etc, jdbcType = VARCHAR}
+			 , #{resp_affil, jdbcType = VARCHAR}
+			 , #{resp_degree, jdbcType = VARCHAR}
+			 , #{resp_sex, jdbcType = VARCHAR}
+			 , #{resp_special1, jdbcType = VARCHAR}
+			 , #{resp_special2, jdbcType = VARCHAR}
+			 , #{resp_special3, jdbcType = VARCHAR}
+			 , #{resp_expert_gbn, jdbcType = VARCHAR}
+			 , #{resp_major, jdbcType = VARCHAR}
+			 , #{resp_school, jdbcType = VARCHAR}
+		     , #{resp_major_nm, jdbcType = VARCHAR}
+			 , replace(#{resp_quit_dt, jdbcType = VARCHAR}, '-', '')
+			 , replace(#{resp_join_dt, jdbcType = VARCHAR}, '-', '')
+			 , 'N'
+			 , NOW()
+			 , #{create_id,  jdbcType = VARCHAR}
+		 )
+
+	</insert>
+	
+		
+	<!-- 책임자 update -->
+	<update id="deleteRespMng" parameterType="java.util.Map">
+	/* updateRespMngMng */
+		 UPDATE PTL_RESP_MNG
+		    SET del_yn = 'Y'		   	  
+		  WHERE 1=1
+		    AND resp_id = #{resp_id}
+	</update>
+	
+</mapper>

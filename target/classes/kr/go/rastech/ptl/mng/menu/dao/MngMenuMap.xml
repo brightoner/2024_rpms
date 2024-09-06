@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.menu.dao.MngMenuDao">
+
+  <select id="readMenuList" resultType="mngMenuVo" parameterType="mngMenuVo">
+	SELECT    <!-- 메뉴id 중복체크에도 readMenuList sql 사용하고있으니 고려... -->
+          MENU_ID as menu_id               /* 메뉴 고유ID */ 
+        , MENU_NM as menu_nm               /* 메뉴 명 */ 
+        , MENU_ENG_NM as menu_eng_nm       /* 메뉴 영문명 */ 
+        , MENU_LEVL as menu_levl           /* 메뉴레벨 */ 
+        , ifnull(MENU_PRTS_ID,'0') as menu_prts_id     /* 상위 메뉴 ID */ 
+        , MENU_USE_YN as menu_use_yn       /* 메뉴 사용여부 */ 
+        , MENU_ORD as menu_ord             /* 메뉴순서 */ 
+        , TOP_MENU_YN as top_menu_yn       /* 상단 메뉴 여부 */ 
+        , LEFT_MENU_YN as left_menu_yn     /* 왼쪽 메뉴 여부 */ 
+        , POP_MENU_YN as pop_menu_yn     /* 팝업 메뉴 여부 */ 
+        <!-- , IP_USE_YN as ip_use_yn     		/* ip 관리 여부 */ 
+        , ENG_YN as eng_yn     		       /* 영어메뉴 사용 여부 */  -->
+        , MODIFY_DTTM as MODIFY_DTTM     /* 메뉴 수정일시 */ 
+        , modify_id as modify_id         /* 메뉴 수정자 */ 
+        , CREATE_DTTM as create_dttm       /* 메뉴 생성일시 */ 
+        , CREATE_ID as create_id           /* 메뉴 생성자 */ 
+     FROM PTL_MENU_MNGT                         /* 메뉴관리 */ 
+    WHERE 1=1 
+ 	<if test="menu_id != null and menu_id != ''">
+ 		AND MENU_ID = #{menu_id, jdbcType = VARCHAR} 
+ 	</if>
+    ORDER BY MENU_LEVL, MENU_ORD
+  </select>
+
+  <insert id="insertMenu" parameterType="mngMenuVo">
+   INSERT INTO 
+        PTL_MENU_MNGT  /* 메뉴관리 */ 
+        ( 
+          MENU_ID
+        , MENU_NM
+        , MENU_ENG_NM 
+        , MENU_LEVL
+        , MENU_PRTS_ID
+        , MENU_USE_YN
+        , MENU_ORD
+        , TOP_MENU_YN
+        , LEFT_MENU_YN
+        , POP_MENU_YN
+        <!-- , IP_USE_YN
+        , ENG_YN -->
+        , MODIFY_DTTM
+        , modify_id
+        , CREATE_DTTM
+        , CREATE_ID
+     ) 
+ VALUES 
+     ( 
+          #{menu_id, jdbcType=VARCHAR}         /* 메뉴 고유id */ 
+        , #{menu_nm, jdbcType=VARCHAR}         /* 메뉴 명 */ 
+        , #{menu_eng_nm, jdbcType=VARCHAR}	 /* 메뉴영문명 */
+        , #{menu_levl, jdbcType=VARCHAR}       /* 메뉴레벨 */ 
+        , ifnull(#{menu_prts_id, jdbcType=VARCHAR},'')    /* 상위 메뉴 id */ 
+        , #{menu_use_yn, jdbcType=VARCHAR}     /* 메뉴 사용여부 */    
+        , #{menu_ord, jdbcType=VARCHAR}        /* 메뉴순서 */ 
+        , #{top_menu_yn, jdbcType=VARCHAR}     /* 상단 메뉴 여부 */ 
+        , #{left_menu_yn, jdbcType=VARCHAR}    /* 왼쪽 메뉴 여부 */ 
+        , #{pop_menu_yn, jdbcType=VARCHAR}    /* 팝업 메뉴 여부 */ 
+        <!-- , #{ip_use_yn, jdbcType=VARCHAR}    /* ip 관리 여부 */ 
+        , #{eng_yn, jdbcType=VARCHAR}    /* 영어메뉴사용 여부 */  -->
+        , now()            /* 메뉴 수정일시 */ 
+        , #{modify_id, jdbcType = VARCHAR}          /* 메뉴 수정자 */ 
+        , now()            /* 메뉴 생성일시 */ 
+        , #{create_id, jdbcType = VARCHAR}           /* 메뉴 생성자 */ 
+     ) 
+  
+  </insert>
+
+  <update id="updateMenu"  parameterType="mngMenuVo">
+    UPDATE 
+          PTL_MENU_MNGT  /* 메뉴관리 */ 
+      SET 
+          MENU_NM =  #{menu_nm, jdbcType=VARCHAR}    /* 메뉴 명 */ 
+        , MENU_ENG_NM = #{menu_eng_nm, jdbcType=VARCHAR}
+        , MENU_LEVL =  #{menu_levl, jdbcType=VARCHAR}    /* 메뉴레벨 */ 
+        , MENU_PRTS_ID =  #{menu_prts_id, jdbcType=VARCHAR}    /* 상위 메뉴 ID */ 
+        , MENU_USE_YN =  #{menu_use_yn, jdbcType=VARCHAR}    /* 메뉴 사용여부 */ 
+        , MENU_ORD =  #{menu_ord, jdbcType=VARCHAR}    /* 메뉴순서 */ 
+        , TOP_MENU_YN =  #{top_menu_yn, jdbcType=VARCHAR}    /* 상단 메뉴 여부 */ 
+        , LEFT_MENU_YN =  #{left_menu_yn, jdbcType=VARCHAR}    /* 왼쪽 메뉴 여부 */ 
+        , POP_MENU_YN =  #{pop_menu_yn, jdbcType=VARCHAR}    /* 팝업 메뉴 여부 */ 
+        <!-- , IP_USE_YN =  #{ip_use_yn, jdbcType=VARCHAR}    /* ip 관리 여부 */ 
+        , ENG_YN =  #{eng_yn, jdbcType=VARCHAR}    /* ip 관리 여부 */  -->
+        , MODIFY_DTTM =  now()    /* 메뉴 수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}   /* 메뉴 수정자 */ 
+ WHERE 1=1 
+   AND MENU_ID = #{menu_id, jdbcType = VARCHAR} 
+  </update>
+
+  <delete id="deleteMenu" parameterType="mngMenuVo">
+    DELETE FROM PTL_MENU_MNGT
+      WHERE MENU_ID IN
+                  (SELECT MENU_ID
+                     FROM PTL_MENU_MNGT
+                    WHERE MENU_PRTS_ID IN
+                                (SELECT MENU_ID
+                                   FROM PTL_MENU_MNGT
+                                  WHERE 1 = 1
+                                        AND (MENU_PRTS_ID = #{menu_id} OR MENU_ID = #{menu_id}))
+            	UNION ALL
+                   SELECT MENU_ID
+                     FROM PTL_MENU_MNGT
+                    WHERE 1 = 1
+                      AND MENU_ID = #{menu_id})
+  </delete>
+  
+  <insert id="insertMenuRol" parameterType="mngMenuRolVo">
+	   INSERT INTO 
+	        PTL_MENU_ROLT  /* 메뉴 권한 */ 
+	        ( 
+	        MENU_ID
+	        , AUTH_GBN
+	        , ROL_ID
+	        , MODIFY_DTTM
+	        , modify_id
+	        , CREATE_DTTM
+	        , CREATE_ID
+	     ) 
+	 VALUES 
+	     ( 
+	          #{menu_id}    /* 메뉴id */ 
+	        , #{auth_gbn}    /* 권한구분 */ 
+	        , #{rol_id}    /* 권한id */ 
+	        , now()    /* 수정일시 */ 
+	        , #{modify_id, jdbcType = VARCHAR}    /* 수정자 */ 
+	        , now()    /* 등록일시 */ 
+	        , #{create_id, jdbcType = VARCHAR}    /* 등록자 */ 
+	     ) 
+  </insert>
+  
+  <insert id="mergeMenuRol" parameterType="mngMenuRolVo">
+
+  		INSERT  INTO PTL_MENU_ROLT    
+                 (  
+                 MENU_ID
+               , AUTH_GBN
+               , ROL_ID
+               , MODIFY_DTTM
+               , modify_id
+               , CREATE_DTTM
+               , CREATE_ID
+               )  
+         VALUES
+               (
+               #{menu_id, jdbcType=VARCHAR} 
+             , #{auth_gbn, jdbcType=VARCHAR} 
+             , #{rol_id, jdbcType=VARCHAR}
+             , now()  
+	  		   , #{modify_id, jdbcType = VARCHAR} 
+	   	   , now()  
+	   	   , #{create_id, jdbcType = VARCHAR} 
+               )            
+   ON DUPLICATE KEY UPDATE MODIFY_DTTM = now() , modify_id = #{modify_id, jdbcType = VARCHAR}
+  </insert>
+  
+  <delete id="deleteMenuRol" parameterType="mngMenuRolVo">
+  DELETE FROM PTL_MENU_ROLT  /* 메뉴 권한 */ 
+   WHERE MENU_ID = #{menu_id, jdbcType = VARCHAR} 
+  </delete>
+  
+  <select id="readMenuRolList" parameterType="String" resultType="mngMenuRolVo">
+   SELECT 
+       MENU_ID as menu_id    /* 메뉴ID */ 
+     , AUTH_GBN as auth_gbn   /* 권한구분 */ 
+     , ROL_ID as rol_id   /* 권한ID */ 
+     , MODIFY_DTTM as MODIFY_DTTM   /* 수정일시 */ 
+     , modify_id as modify_id   /* 수정자 */ 
+     , CREATE_DTTM as create_dttm   /* 등록일시 */ 
+     , CREATE_ID as create_id   /* 등록자 */ 
+  FROM PTL_MENU_ROLT  /* 메뉴권한 */ 
+ WHERE 1=1 
+   AND MENU_ID = #{menu_id, jdbcType=VARCHAR} 
+  ORDER BY MENU_ID,AUTH_GBN
+  </select>
+  
+  <update id="updateMenuDtl" parameterType="mngMenuVo">
+    UPDATE 
+          PTL_MENU_MNGT  /* 메뉴관리 */ 
+      SET 
+          MENU_USE_YN =  CASE WHEN #{menu_use_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE MENU_USE_YN END    /* 메뉴 사용여부 */ 
+        , TOP_MENU_YN =  CASE WHEN #{top_menu_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE TOP_MENU_YN END    /* 상단 메뉴 여부 */ 
+        , LEFT_MENU_YN = CASE WHEN #{left_menu_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE LEFT_MENU_YN END    /* 왼쪽 메뉴 여부 */ 
+        , POP_MENU_YN = CASE WHEN #{pop_menu_yn, jdbcType=VARCHAR} = 'N' THEN 'N' ELSE POP_MENU_YN END    /* 왼쪽 메뉴 여부 */ 
+        , MODIFY_DTTM =  now()    /* 메뉴 수정일시 */ 
+        , modify_id =  #{modify_id, jdbcType = VARCHAR}    /* 메뉴 수정자 */ 
+ WHERE 1=1 
+   AND MENU_PRTS_ID = #{menu_id, jdbcType = VARCHAR}   
+  </update>
+  
+</mapper>

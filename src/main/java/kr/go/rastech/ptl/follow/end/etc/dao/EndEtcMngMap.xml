@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.end.etc.dao.EndEtcMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 최종사후관리 기타 list -->
+	<select id="selectEndEtcList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndEtcList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.END_ETC_ID
+			  , A.PROJ_END_ID
+			  , A.END_ETC_NM
+			  , A.END_ETC_CN
+			  , A.END_ETC_GB
+			  , A.END_ETC_INFO
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , A.MODIFY_ID
+			  , DATE_FORMAT(A.MODIFY_DTTM,'%Y-%m-%d') AS MODIFY_DTTM
+		  FROM  PTL_END_FOLLOW_ETC A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		 WHERE  1=1  
+ 		   AND  A.PROJ_END_ID = #{proj_end_id}
+ 	  ORDER BY  A.END_ETC_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 최종사후관리 기타 count -->
+	<select id="selectEndEtcListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndEtcListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_END_FOLLOW_ETC
+ 		 WHERE  1=1  
+ 		   AND  PROJ_END_ID = #{proj_end_id}
+	</select>
+	
+	
+	<!-- 최종사후관리 기타 상세보기 -->
+	<select id="selectEndEtcDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectEndEtcDtl */
+		SELECT  END_ETC_ID
+	  		  , PROJ_END_ID
+			  , END_ETC_NM
+			  , END_ETC_CN
+			  , END_ETC_GB
+			  , END_ETC_INFO
+			  , CREATE_ID
+			  , DATE_FORMAT(CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+			  , MODIFY_ID
+			  ,DATE_FORMAT(MODIFY_DTTM,'%Y-%m-%d') AS MODIFY_DTTM
+		  FROM  PTL_END_FOLLOW_ETC
+		 WHERE  1=1
+		   AND  END_ETC_ID = #{end_etc_id} 
+	</select>	
+	
+	
+	<!-- 최종사후관리 기타 등록 -->
+	<insert id="insertEndEtc" parameterType="java.util.Map">
+	/* insertEndEtc */
+		 INSERT INTO PTL_END_FOLLOW_ETC (
+					  END_ETC_ID
+					, PROJ_END_ID
+					, END_ETC_NM
+					, END_ETC_CN
+					, END_ETC_GB
+					, END_ETC_INFO
+					, CREATE_ID
+					, CREATE_DTTM
+				) VALUES (
+					<choose>
+						<when test="end_etc_id != null and end_etc_id != ''">
+							#{end_etc_id, jdbcType=VARCHAR}	
+						</when>		
+						<otherwise>
+							NEXTVAL(PTL_END_FOLLOW_ETC_SEQ)
+						</otherwise>			
+					</choose>
+					, #{proj_end_id_etc, jdbcType=VARCHAR}	
+					, #{end_etc_nm, jdbcType=VARCHAR}	
+					, #{end_etc_cn, jdbcType=VARCHAR}	
+					, #{end_etc_gb, jdbcType=VARCHAR}	
+					, #{end_etc_info, jdbcType=VARCHAR}	
+					, #{create_id, jdbcType=VARCHAR}	
+					, NOW()
+				) ON DUPLICATE KEY UPDATE
+					  END_ETC_NM = #{end_etc_nm, jdbcType=VARCHAR}	
+					, END_ETC_CN = #{end_etc_cn, jdbcType=VARCHAR}	
+					, END_ETC_GB = #{end_etc_gb, jdbcType=VARCHAR}	
+					, END_ETC_INFO = #{end_etc_info, jdbcType=VARCHAR}	
+					, MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+					, MODIFY_DTTM = NOW()
+    </insert>
+    
+    
+    <!-- 최종사후관리 기타 삭제 -->
+	<delete id="deleteEndEtc" parameterType="java.util.Map">
+	/* deleteEndEtc */
+		DELETE
+		  FROM  PTL_END_FOLLOW_ETC
+		 WHERE  1=1
+		   AND  END_ETC_ID = #{end_etc_id} 
+	</delete>
+	
+	
+	
+	
+</mapper>

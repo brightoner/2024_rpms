@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.commons.code.dao.CodeDao">
+  <!-- 코드 목록을 조회 -->
+  <select id="selectReportList" parameterType="map" resultType="codeVo">
+    WITH cte_url AS (
+      SELECT up_url_no
+           , url_no
+           , url
+           , url_nm
+           , CAST(CONVERT(VARCHAR(50), dbo.fn_lpad(5, '0', url_no)) AS VARCHAR(50)) sort
+           , 1 AS lvl
+        FROM dbo.tst_url_mng
+       WHERE up_url_no IS NULL
+         AND url_no IN (61, 72, 98, 113, 116)
+      UNION ALL
+      SELECT a.up_url_no
+           , a.url_no
+           , a.url
+           , a.url_nm
+           , CAST(CONVERT(VARCHAR(50), dbo.fn_lpad(5, '0', b.url_no)) + '_' + CONVERT(VARCHAR(50), dbo.fn_lpad(5, '0', a.url_no)) AS VARCHAR(50))
+           , b.lvl + 1
+        FROM dbo.tst_url_mng a
+           , cte_url b
+       WHERE a.up_url_no = b.url_no
+    )
+    SELECT a.url    AS cd
+         , a.url_nm AS cdNm
+      FROM cte_url a
+        , (SELECT DISTINCT url_no
+             FROM dbo.tst_url_auth_mng
+            <foreach collection="roleList" item="role" separator="," open="WHERE menu_auth_cd IN (" close=", 'ROLE_GUEST')">
+            #{role}
+            </foreach>
+           ) b
+     WHERE a.url_no = b.url_no
+       AND a.up_url_no IS NOT NULL
+       <if test="searchWord != null and searchWord != ''">
+       AND a.url_nm LIKE '%' + #{searchWord} + '%'
+       </if>
+     ORDER BY sort
+  </select>
+  
+  
+  
+</mapper>

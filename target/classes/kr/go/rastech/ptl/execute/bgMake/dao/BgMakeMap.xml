@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.execute.bgMake.dao.BgMakeDao">
+
+ 
+ 	<!-- bgMake 리스트 -->
+	<select id="selectProjBgMakeList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectProjBgMakeList */ 	
+		select t.* from (
+		 	   select a.budget_id
+				 	,  a.subj_id
+				 	, (select c.subj_nm from rpms.ptl_account_subject_code c where a.subj_id = c.subj_id )  as subj_nm
+				 	, (select c.subj_no from rpms.ptl_account_subject_code c where a.subj_id = c.subj_id )  as subj_no
+				 	, (select c.subj_levl from rpms.ptl_account_subject_code c where a.subj_id = c.subj_id )  as subj_levl
+		 			, (select c.subj_prts_id  from rpms.ptl_account_subject_code c where a.subj_id = c.subj_id )  as subj_prts_id
+				 	, a.proj_year_id	
+				 	, a.cash
+				 	, a.stock   
+				 	, a.ongo_cash
+				 	, a.ongo_stock   
+				 	, a.exec_account   
+				 	, a.stock_exec_account   
+				 	, (a.cash + a.stock + a.ongo_cash + a.ongo_stock) as sum_data   
+				 	, (a.cash + a.ongo_cash) as cash_sum_data   
+				 	, (a.stock + a.ongo_stock) as stock_sum_data   
+				 	, (a.cash +  a.ongo_cash  - a.exec_account   ) as cash_remain_account   
+				 	, (a.stock +  a.ongo_stock  - a.stock_exec_account   ) as stock_remain_account   
+				 	, a.etc  
+				 	, a.exec_etc 
+				  from rpms.ptl_project_budget  a
+				  where a.proj_year_id = #{proj_year_id, jdbcType=VARCHAR}
+				    and a.use_yn = 'Y'
+		  ) t 
+	  order by t.subj_no 
+			
+			
+
+	</select>
+	
+	<select id="selectProjAccountSubjectList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectProjAccountSubjectList */ 	
+			 	 	
+			WITH RECURSIVE subj_cte AS (
+			    SELECT distinct
+			           subj_id
+			          , subj_nm
+			          , subj_levl
+			          , subj_prts_id
+			    FROM rpms.ptl_account_subject_code 			
+			    UNION ALL
+			    SELECT distinct
+			    		 m.subj_id
+			          , m.subj_nm
+			          , m.subj_levl
+			          , m.subj_prts_id			          
+			    FROM rpms.ptl_account_subject_code m
+			    JOIN subj_cte cte ON m.subj_prts_id = cte.subj_id		
+			)
+			SELECT  distinct
+				 subj_id
+			          , subj_nm
+			          , subj_levl
+			          , subj_prts_id
+			FROM subj_cte
+			
+			
+
+	</select>
+	
+		
+  <insert id="insertProjAcctSubj" parameterType="java.util.Map">
+    <selectKey keyProperty="budget_id" resultType="string" order="BEFORE">
+      SELECT NEXTVAL(ptl_project_budget_seq) FROM DUAL
+    </selectKey>
+		  INSERT INTO  ptl_project_budget
+		        ( 
+		              BUDGET_ID 
+			        , SUBJ_ID
+			        , PROJ_YEAR_ID     	        
+			        , CASH
+			        , STOCK    
+		            , ONGO_CASH
+			        , ONGO_STOCK   
+			        , EXEC_ACCOUNT
+			        , STOCK_EXEC_ACCOUNT
+			        , USE_YN  	        
+			        , CREATE_DTTM
+			        , CREATE_ID	       
+		     	) 
+		 	VALUES 
+		    	(  
+		    	      #{budget_id, jdbcType=VARCHAR}
+			        ,  #{subj_id, jdbcType=VARCHAR}         			      			
+			        , #{proj_year_id, jdbcType=VARCHAR}
+			        , ifnull( #{cash, jdbcType=INTEGER} , 0)
+			        ,  ifnull(#{stock, jdbcType=INTEGER}, 0)			        		       				 	       
+			        , ifnull( #{ongo_cash, jdbcType=INTEGER} , 0)
+			        ,  ifnull(#{ongo_stock, jdbcType=INTEGER}, 0)			        		       				 	       
+			        ,  0			        		       				 	       
+     			    ,  0
+			        , 'Y'			        		       				 	       
+			        , now()            								 
+			        , #{create_id, jdbcType = VARCHAR}              
+		       ) 
+		         ON DUPLICATE KEY UPDATE
+		    SUBJ_ID = #{subj_id, jdbcType=VARCHAR}
+		    , USE_YN = 'Y'      
+		 , MODIFY_DTTM = now()  
+		 ,  MODIFY_ID = #{modify_id, jdbcType = VARCHAR}    
+       
+    </insert>
+    
+      <update id="updateProjBudget" parameterType="java.util.Map">
+   
+		 UPDATE  ptl_project_budget SET
+		         CASH = ifnull(#{cash, jdbcType=INTEGER} , 0)
+	          ,  STOCK = ifnull(#{stock, jdbcType=INTEGER}, 0)    	        
+		      ,  ONGO_CASH = ifnull(#{ongo_cash, jdbcType=INTEGER} , 0)
+	          ,  ONGO_STOCK = ifnull(#{ongo_stock, jdbcType=INTEGER}, 0)    	        	     	       
+	          ,  ETC = #{etc, jdbcType=VARCHAR}	        	 
+	          ,  MODIFY_DTTM = now()
+	          ,  MODIFY_ID = #{modify_id, jdbcType = VARCHAR}	        
+		  WHERE  BUDGET_ID = #{budget_id, jdbcType=VARCHAR}
+			        
+    </update>
+  
+       <update id="updateProjBudgetExec" parameterType="java.util.Map">
+   
+		 UPDATE  ptl_project_budget SET
+		         EXEC_ACCOUNT = ifnull(#{exec_account, jdbcType=INTEGER} , 0)	              	        	     	      
+		      ,  STOCK_EXEC_ACCOUNT = ifnull(#{stock_exec_account, jdbcType=INTEGER} , 0)	              	        	     	      
+	          ,  EXEC_ETC = #{exec_etc, jdbcType=VARCHAR}	        	 
+	          ,  MODIFY_DTTM = now()
+	          ,  MODIFY_ID = #{modify_id, jdbcType = VARCHAR}	        
+		  WHERE  BUDGET_ID = #{budget_id, jdbcType=VARCHAR}
+			        
+    </update>  
+      <update id="deleteProjBudget" parameterType="java.util.Map">
+   
+		 UPDATE  ptl_project_budget SET		          
+	             USE_YN = 'N'	        
+	          ,  MODIFY_DTTM = now()
+	          ,  MODIFY_ID = #{modify_id, jdbcType = VARCHAR}	        
+		  WHERE  BUDGET_ID = #{budget_id, jdbcType=VARCHAR}
+			        
+    </update>
+    
+</mapper>

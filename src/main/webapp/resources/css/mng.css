@@ -1,0 +1,35 @@
+@charset "utf-8";
+
+/*
+ * File       : mng.css
+ */
+
+/* **************************************** *
+ * MNG
+ * **************************************** */
+ /* listncmiklibMng.jsp */
+#container_box{border-bottom:1px solid #ddd;}
+#content{    
+	width: 100%;
+	max-width:1200px;
+	margin:0 auto;
+    float: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+.table_v td{line-height:30px;} 
+.search_box:before{font: italic bold 60px Arial, sans-serif;bottom:-13px;}
+.search_box.mng .flex_box{padding-bottom:3px;}
+.search_box.mng .flex_box > div:after{clear:both;display:block;content:"";}
+.search_box.mng .flex_box > div > .custom-select{width:65%;float:right;}
+.search_box.mng label{text-align:right;display:inline-block;padding-right:10px;line-height:40px;}
+.search_box.mng .flex_box > div > label{width:35%;float:left;}
+.search_box.mng .flex_box input[type="text"]{width:100%;}
+.search_box.mng .btn_datepicker{top:10px;}
+.search_box.mng .flex_box > .picker_box{flex-grow:2.025;}
+.search_box.mng .flex_box > .picker_box > p{width:49.5%;float:left;}
+.search_box.mng .flex_box > .picker_box > p:last-child{width:48%;float:right;}
+.ui-datepicker{padding:0;}
+
+/* listOrgMng.jsp */
+.flex_box .hyphen:before{content:"-";position:absolute;line-height:30px;color:#2D60D4;font-weight:bold;margin-left:-6px;}

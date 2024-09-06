@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+
+<!-- 거래 방송 플랫폼  메인화면 컨텐츠 -->
+<definition name="**/*.mainPlatForm" extends="mainPlatFormContent">
+	<put-attribute name="mainPlatFormBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="mainPlatFormBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+
+<definition name="mainPlatFormContent" template="/WEB-INF/views/layout/mainPlatFormLayout.jsp">
+    <put-attribute name="mainPlatFormHeader" value="/WEB-INF/views/layout/includes/main/mainPlatFormHeader.jsp" />	     
+  	<put-attribute name="mainPlatFormFooter" value="/WEB-INF/views/layout/includes/main/mainPlatFormFooter.jsp" /> 	
+  	<put-attribute name="mainPlatFormMeta" value="/WEB-INF/views/layout/includes/main/mainPlatFormMeta.jsp" />
+    <put-attribute name="mainPlatFormLeft" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormLeft.jsp" />
+    <put-attribute name="mainPlatFormRight" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormRight.jsp" />
+</definition> 
+
+<!-- 거래 방송 플랫폼  서브화면 컨텐츠 -->
+<definition name="**/*.subPlatForm" extends="subPlatFormContent">
+	<put-attribute name="subPlatFormBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="subPlatFormBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="subPlatFormContent" template="/WEB-INF/views/layout/subPlatFormLayout.jsp">
+    <put-attribute name="subPlatFormHeader" value="/WEB-INF/views/layout/includes/sub/subPlatFormHeader.jsp" />	
+    <put-attribute name="subPlatFormLeftMenu" value="/WEB-INF/views/layout/includes/sub/subPlatFormLeftMenu.jsp" />  
+  	<put-attribute name="subPlatFormFooter" value="/WEB-INF/views/layout/includes/sub/subPlatFormFooter.jsp" /> 	
+  	<put-attribute name="subPlatFormMeta" value="/WEB-INF/views/layout/includes/sub/subPlatFormMeta.jsp" />
+  	<put-attribute name="subPlatFormLeft" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormLeft.jsp" />
+    <put-attribute name="subPlatFormRight" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormRight.jsp" /> 
+</definition> 
+
+<!-- 관리자용 타일즈  컨텐츠 -->
+<definition name="**/*.mngPlatForm" extends="mngPlatFormContent">
+	<put-attribute name="mngPlatFormBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="mngPlatFormBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="mngPlatFormContent" template="/WEB-INF/views/layout/mngPlatFormLayout.jsp"> 
+    <put-attribute name="mngPlatFormHeader" value="/WEB-INF/views/layout/includes/mng/mngPlatFormHeader.jsp" />	
+    <put-attribute name="mngPlatFormLeftMenu" value="/WEB-INF/views/layout/includes/mng/mngPlatFormLeftMenu.jsp" />        
+  	<put-attribute name="mngPlatFormFooter" value="/WEB-INF/views/layout/includes/mng/mngPlatFormFooter.jsp" /> 
+  	<put-attribute name="mngPlatFormMeta" value="/WEB-INF/views/layout/includes/mng/mngPlatFormMeta.jsp" />
+    <put-attribute name="mngPlatFormLeft" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormLeft.jsp" />
+    <put-attribute name="mngPlatFormRight" value="/WEB-INF/views/layout/includes/cmm/cmmPlatFormRight.jsp" />
+</definition>  
+
+<!-- 팝업메뉴 타일즈 -->
+<definition name="**/*.ptiles" extends="ncmikPContent">
+	<put-attribute name="pBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="pBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="**/*/*.ptiles" extends="ncmikPContent">
+		<put-attribute name="pBody" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+</definition>
+
+<definition name="ncmikPContent" template="/WEB-INF/views/layout/pContentsLayout.jsp">
+ 	  <put-attribute name="pHeader" value="/WEB-INF/views/layout/includes/mng/mngHeader.jsp" />
+	  <put-attribute name="pFooter" value="/WEB-INF/views/layout/includes/mng/mngFooter.jsp" />
+	  <put-attribute name="pMeta" value="/WEB-INF/views/layout/includes/sub/subMeta.jsp" />   
+</definition> 
+
+<!-- 팝업용  -->
+ <definition name="ncmikPopContent" template="/WEB-INF/views/layout/mngContentsLayout.jsp">
+	  <put-attribute name="mngMeta" value="/WEB-INF/views/layout/includes/sub/subMeta.jsp" />   
+</definition> 
+ 
+<definition name="**/*/*.notiles" extends="ncmikPopContent">
+		<put-attribute name="mngBody" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+</definition>
+
+ <definition name="**/*.notiles" extends="ncmikPopContent">
+		<put-attribute name="mngBody" value="/WEB-INF/views/{1}.jsp"/>
+		<put-attribute name="mngBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+ </definition>
+
+<!-- in 타일즈 -->   
+<definition name="**/*.intiles" extends="inContent">
+	<put-attribute name="inBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="inBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="**/*/*.intiles" extends="inContent">
+		<put-attribute name="inBody" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+</definition>
+
+<definition name="inContent" template="/WEB-INF/views/layout/inContentsLayout.jsp"> 
+</definition> 
+
+
+<!-- 팝업용 타일즈 -->
+<definition name="**/*.popPlatForm" extends="popPlatFormContent">
+	<put-attribute name="popPlatFormBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="popPlatFormBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="**/*/*.popPlatForm" extends="popPlatFormContent">
+		<put-attribute name="popPlatFormBody" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+</definition>
+
+<definition name="popPlatFormContent" template="/WEB-INF/views/layout/popPlatFormLayout.jsp">
+<!--  	  <put-attribute name="pHeader" value="/WEB-INF/views/layout/includes/mng/mngHeader.jsp" /> -->
+<!-- 	  <put-attribute name="pFooter" value="/WEB-INF/views/layout/includes/mng/mngFooter.jsp" /> -->
+	  <put-attribute name="popPlatFormMeta" value="/WEB-INF/views/layout/includes/pop/popPlatFormMeta.jsp" /> 
+</definition>
+
+
+<!-- 선물, 현물 투자 화면용 타일즈 -->
+<definition name="**/*.tradeForm" extends="tradeFormContent">
+	<put-attribute name="tradeFormBody" value="/WEB-INF/views/{1}.jsp"/>
+	<put-attribute name="tradeFormBody" value="/WEB-INF/views/{1}/{2}.jsp"/>
+</definition>
+<definition name="tradeFormContent" template="/WEB-INF/views/layout/tradeFormLayout.jsp">
+    <put-attribute name="tradeFormHeader" value="/WEB-INF/views/layout/includes/trade/tradeFormHeader.jsp" />	
+  	<put-attribute name="tradeFormFooter" value="/WEB-INF/views/layout/includes/trade/tradeFormFooter.jsp" /> 	
+  	<put-attribute name="tradeFormMeta" value="/WEB-INF/views/layout/includes/trade/tradeFormMeta.jsp" />
+</definition> 
+
+
+
+</tiles-definitions>

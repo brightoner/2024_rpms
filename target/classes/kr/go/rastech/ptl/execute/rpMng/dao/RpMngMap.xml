@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.execute.rpMng.dao.RpMngDao">
+
+
+ 	<!--  리스트 -->
+	<select id="selectProjRpMngList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 		/* selectProjRpMngList */ 	
+	select * from( 
+			  select '1' as order_sn
+					, b.resp_nm as resp_nm 
+					, a.year_resp_cd
+					, (case when  a.year_resp_gb = 'L' then '연구책임자' 
+						    when  a.year_resp_gb = 'R' then '실무담당자'
+					        else '기타' end) as year_resp_nm			
+					, GROUP_CONCAT(concat(date_format(a.year_part_strtdt ,'%Y.%m.%d'), '~' ,date_format(a.year_part_enddt,'%Y.%m.%d') ,<![CDATA[  '<span class=\'partRate\' >','(', a.year_part_rate ,')', '</span>' ]]> ) order by a.year_part_strtdt asc , a.sub_year_resp_id separator <![CDATA[ '<br/>'	 ]]>) as year_part
+					, c.proj_year_id
+					, c.proj_nm_kor
+					, c.proj_recpt_no 
+					, date_format(c.cur_strtdt,'%Y.%m.%d')  as cur_strtdt
+					, date_format(c.cur_enddt,'%Y.%m.%d')  as cur_enddt
+					, (select r.jan_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jan_rate
+					, (select r.feb_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as feb_rate
+					, (select r.mar_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as mar_rate
+					, (select r.apr_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as apr_rate
+					, (select r.may_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as may_rate
+					, (select r.jun_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jun_rate
+					, (select r.jul_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jul_rate
+					, (select r.aug_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as aug_rate
+					, (select r.sept_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as sept_rate
+					, (select r.oct_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as oct_rate
+					, (select r.nov_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as nov_rate
+					, (select r.dec_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as dec_rate
+				 from  rpms.PTL_YEAR_RESPONSIBLE_PERSON  a , rpms.PTL_RESP_MNG b ,  rpms.PTL_PROJECT_YEAR  c 
+		        where  a.year_resp_cd = b.resp_id  
+		          and  a.proj_year_id = c.proj_year_id 
+		          and  c.DEL_YN = 'N' 
+	        	<if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "resp_nm" ' >
+				    		AND replace(b.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					<if test='searchopt == "proj_nm" ' >
+			    		AND replace(c.proj_nm_kor , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					
+					
+				</if>
+				<if test='searchoptYear != "" and searchoptYear != null ' >
+			    		AND  date_format(c.cur_strtdt,'%Y')  =  #{searchoptYear}
+				</if>
+		     group by b.resp_nm ,  a.year_resp_cd , a.year_resp_gb , c.proj_year_id, c.proj_nm_kor , c.proj_recpt_no , c.cur_strtdt, c.cur_enddt
+	     union all
+		     select order_sn
+				,  resp_nm 
+				,  year_resp_cd
+				, '' as year_resp_nm			
+				, '' as year_part
+				, '' as proj_year_id
+				, '' as proj_nm_kor
+				, '' as proj_recpt_no 
+				, '' as  cur_strtdt
+				, '' as  cur_enddt
+				, sum(jan_rate)
+				, sum(feb_rate)
+				, sum(mar_rate)
+				, sum(apr_rate)
+				, sum(may_rate)
+				, sum(jun_rate)
+				, sum(jul_rate)
+				, sum(aug_rate)
+				, sum( sept_rate)
+				, sum(oct_rate)
+				, sum(nov_rate)
+				, sum(dec_rate)
+				from (
+		      select '2' as order_sn
+					, b.resp_nm as resp_nm 
+					, a.year_resp_cd
+					, (case when  a.year_resp_gb = 'L' then '연구책임자' 
+						    when  a.year_resp_gb = 'R' then '실무담당자'
+					        else '기타' end) as year_resp_nm			
+					, GROUP_CONCAT(concat(date_format(a.year_part_strtdt ,'%Y.%m.%d'), '~' ,date_format(a.year_part_enddt,'%Y.%m.%d') ,<![CDATA[  '<span class=\'partRate\' >','(', a.year_part_rate ,')', '</span>' ]]> ) order by a.year_part_strtdt asc , a.sub_year_resp_id separator <![CDATA[ '<br/>'	 ]]>) as year_part
+					, c.proj_year_id
+					, c.proj_nm_kor
+					, c.proj_recpt_no 
+					, date_format(c.cur_strtdt,'%Y.%m.%d')  as cur_strtdt
+					, date_format(c.cur_enddt,'%Y.%m.%d')  as cur_enddt
+					, (select r.jan_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jan_rate
+					, (select r.feb_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as feb_rate
+					, (select r.mar_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as mar_rate
+					, (select r.apr_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as apr_rate
+					, (select r.may_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as may_rate
+					, (select r.jun_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jun_rate
+					, (select r.jul_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jul_rate
+					, (select r.aug_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as aug_rate
+					, (select r.sept_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as sept_rate
+					, (select r.oct_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as oct_rate
+					, (select r.nov_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as nov_rate
+					, (select r.dec_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as dec_rate
+				 from  rpms.PTL_YEAR_RESPONSIBLE_PERSON  a , rpms.PTL_RESP_MNG b ,  rpms.PTL_PROJECT_YEAR  c 
+		        where  a.year_resp_cd = b.resp_id  
+		          and  a.proj_year_id = c.proj_year_id 
+		          and  c.DEL_YN = 'N' 
+	        	<if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "resp_nm" ' >
+				    		AND replace(b.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					<if test='searchopt == "proj_nm" ' >
+			    		AND replace(c.proj_nm_kor , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+	
+				</if>
+				<if test='searchoptYear != "" and searchoptYear != null ' >
+			    		AND  date_format(c.cur_strtdt,'%Y')  =  #{searchoptYear}
+				</if>
+		   group by b.resp_nm ,  a.year_resp_cd , a.year_resp_gb , c.proj_year_id, c.proj_nm_kor , c.proj_recpt_no , c.cur_strtdt, c.cur_enddt
+		  ) aa group by  order_sn,  resp_nm , year_resp_cd
+	     ) t
+		 ORDER BY YEAR_RESP_CD ASC ,  order_sn asc  ,year_part asc, proj_year_id ASC
+	
+	</select>
+	
+		<!--  리스트 -->
+	<select id="selectExcelProjRpMngList"  parameterType="java.util.Map"  resultType="java.util.HashMap">
+ 		/* selectProjRpMngList */ 	
+	select * from( 
+			  select '1' as order_sn
+					, b.resp_nm as resp_nm 
+					, a.year_resp_cd
+					, (case when  a.year_resp_gb = 'L' then '연구책임자' 
+						    when  a.year_resp_gb = 'R' then '실무담당자'
+					        else '기타' end) as year_resp_nm			
+				   , GROUP_CONCAT(concat(date_format(a.year_part_strtdt ,'%Y.%m.%d'), '~' ,date_format(a.year_part_enddt,'%Y.%m.%d') ,' ','(', a.year_part_rate ,')') order by a.year_part_strtdt asc , a.sub_year_resp_id separator  '\n'	 ) as year_part
+					, c.proj_year_id
+					, concat( '(',date_format(c.cur_strtdt,'%Y.%m.%d') , '~', date_format(c.cur_enddt,'%Y.%m.%d') ,')\n', c.proj_nm_kor ) as proj_nm_kor_from
+					, c.proj_nm_kor 
+					, c.proj_recpt_no 
+					, date_format(c.cur_strtdt,'%Y.%m.%d')  as cur_strtdt
+					, date_format(c.cur_enddt,'%Y.%m.%d')  as cur_enddt
+					, (select r.jan_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jan_rate
+					, (select r.feb_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as feb_rate
+					, (select r.mar_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as mar_rate
+					, (select r.apr_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as apr_rate
+					, (select r.may_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as may_rate
+					, (select r.jun_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jun_rate
+					, (select r.jul_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jul_rate
+					, (select r.aug_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as aug_rate
+					, (select r.sept_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as sept_rate
+					, (select r.oct_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as oct_rate
+					, (select r.nov_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as nov_rate
+					, (select r.dec_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as dec_rate
+				 from  rpms.PTL_YEAR_RESPONSIBLE_PERSON  a , rpms.PTL_RESP_MNG b ,  rpms.PTL_PROJECT_YEAR  c 
+		        where  a.year_resp_cd = b.resp_id  
+		          and  a.proj_year_id = c.proj_year_id 
+		          and  c.DEL_YN = 'N' 
+	        	<if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "resp_nm" ' >
+				    		AND replace(b.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					<if test='searchopt == "proj_nm" ' >
+			    		AND replace(c.proj_nm_kor , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					
+					
+				</if>
+				<if test='searchoptYear != "" and searchoptYear != null ' >
+			    		AND  date_format(c.cur_strtdt,'%Y')  =  #{searchoptYear}
+				</if>
+		     group by b.resp_nm ,  a.year_resp_cd , a.year_resp_gb , c.proj_year_id, c.proj_nm_kor , c.proj_recpt_no , c.cur_strtdt, c.cur_enddt
+	     union all
+		     select order_sn
+				,  resp_nm 
+				,  year_resp_cd
+				, '' as year_resp_nm			
+				, '' as year_part
+				, '' as proj_year_id
+				, '소        계' as proj_nm_kor_from
+				, '' as proj_nm_kor
+				, '' as proj_recpt_no 
+				, '' as  cur_strtdt
+				, '' as  cur_enddt
+				, sum(jan_rate)
+				, sum(feb_rate)
+				, sum(mar_rate)
+				, sum(apr_rate)
+				, sum(may_rate)
+				, sum(jun_rate)
+				, sum(jul_rate)
+				, sum(aug_rate)
+				, sum( sept_rate)
+				, sum(oct_rate)
+				, sum(nov_rate)
+				, sum(dec_rate)
+				from (
+		      select '2' as order_sn
+					, b.resp_nm as resp_nm 
+					, a.year_resp_cd
+					, (case when  a.year_resp_gb = 'L' then '연구책임자' 
+						    when  a.year_resp_gb = 'R' then '실무담당자'
+					        else '기타' end) as year_resp_nm			
+					, GROUP_CONCAT(concat(date_format(a.year_part_strtdt ,'%Y.%m.%d'), '~' ,date_format(a.year_part_enddt,'%Y.%m.%d') ,' ', '(', a.year_part_rate ,')') order by a.year_part_strtdt asc , a.sub_year_resp_id separator  '\n'	 ) as year_part
+					, c.proj_year_id
+					, concat( '(',date_format(c.cur_strtdt,'%Y.%m.%d') , '~', date_format(c.cur_enddt,'%Y.%m.%d') ,')\n', c.proj_nm_kor ) as proj_nm_kor_from
+					, c.proj_nm_kor
+					, c.proj_recpt_no 
+					, date_format(c.cur_strtdt,'%Y.%m.%d')  as cur_strtdt
+					, date_format(c.cur_enddt,'%Y.%m.%d')  as cur_enddt
+					, (select r.jan_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jan_rate
+					, (select r.feb_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as feb_rate
+					, (select r.mar_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as mar_rate
+					, (select r.apr_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as apr_rate
+					, (select r.may_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as may_rate
+					, (select r.jun_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jun_rate
+					, (select r.jul_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as jul_rate
+					, (select r.aug_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as aug_rate
+					, (select r.sept_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as sept_rate
+					, (select r.oct_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as oct_rate
+					, (select r.nov_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as nov_rate
+					, (select r.dec_rate from rpms.ptl_project_resp_part_rate r where r.proj_year_id = c.proj_year_id and r.year_resp_cd  = a.year_resp_cd )as dec_rate
+				 from  rpms.PTL_YEAR_RESPONSIBLE_PERSON  a , rpms.PTL_RESP_MNG b ,  rpms.PTL_PROJECT_YEAR  c 
+		        where  a.year_resp_cd = b.resp_id  
+		          and  a.proj_year_id = c.proj_year_id 
+		          and  c.DEL_YN = 'N' 
+	        	<if test='searchword != "" and searchword != null ' >
+					<if test='searchopt == "resp_nm" ' >
+				    		AND replace(b.resp_nm , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+					<if test='searchopt == "proj_nm" ' >
+			    		AND replace(c.proj_nm_kor , ' ','') like concat('%',replace(#{searchword} , ' ',''),'%')
+					</if>
+	
+				</if>
+				<if test='searchoptYear != "" and searchoptYear != null ' >
+			    		AND  date_format(c.cur_strtdt,'%Y')  =  #{searchoptYear}
+				</if>
+		   group by b.resp_nm ,  a.year_resp_cd , a.year_resp_gb , c.proj_year_id, c.proj_nm_kor , c.proj_recpt_no , c.cur_strtdt, c.cur_enddt
+		  ) aa group by  order_sn,  resp_nm , year_resp_cd
+	     ) t
+		 ORDER BY YEAR_RESP_CD ASC ,  order_sn asc  ,year_part asc, proj_year_id ASC
+	
+	</select>
+	
+	<select id="selectChkProjRpRate"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	   select sum(ifnull(jan_rate , 0 ) +ifnull(feb_rate , 0 )
+				+ ifnull(mar_rate , 0 )+ ifnull(apr_rate , 0 )
+				+ ifnull(may_rate , 0 )+ ifnull(jun_rate , 0 )
+				+ ifnull(jul_rate , 0 ) + ifnull(aug_rate , 0 )
+				+ ifnull(sept_rate , 0 )+ ifnull(oct_rate , 0 )
+				+ ifnull(nov_rate , 0 )+ ifnull(dec_rate , 0 )
+				) as sum_rate	 
+		from  rpms.ptl_project_resp_part_rate
+       where 1=1
+       <if test='year_resp_cd != "" and year_resp_cd != null ' > 
+         and   year_resp_cd =#{year_resp_cd} 
+        </if>
+         and  proj_year_id =#{proj_year_id}
+	
+		
+	</select>
+		
+  	<insert id="insertProjRpMng" parameterType="java.util.Map">
+   
+		  INSERT INTO  ptl_project_resp_part_rate
+		        ( 
+		               PROJ_YEAR_ID 
+			        ,  YEAR_RESP_CD     	        
+			        ,  JAN_RATE
+					,  FEB_RATE
+					,  MAR_RATE
+					,  APR_RATE
+					,  MAY_RATE
+					,  JUN_RATE
+					,  JUL_RATE
+					,  AUG_RATE
+					,  SEPT_RATE
+					,  OCT_RATE
+					,  NOV_RATE
+					,  DEC_RATE
+					,  CREATE_DTTM
+					,  CREATE_ID
+					
+		     	) 
+		 	VALUES 
+		    	(  
+		    	      #{proj_year_id, jdbcType=VARCHAR}			            			      			
+			        , #{year_resp_cd, jdbcType=VARCHAR}
+			        , ifnull( #{jan_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{feb_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{mar_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{apr_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{may_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{jun_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{jul_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{aug_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{sept_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{oct_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{nov_rate, jdbcType=VARCHAR} , '0')
+			        , ifnull( #{dec_rate, jdbcType=VARCHAR} , '0')     			    	       				 	       
+			        , now()            								 
+			        , #{create_id, jdbcType = VARCHAR}              
+		       ) 
+		         ON DUPLICATE KEY UPDATE
+		  			   JAN_RATE = ifnull( #{jan_rate, jdbcType=VARCHAR} , '0')
+					,  FEB_RATE = ifnull( #{feb_rate, jdbcType=VARCHAR} , '0')
+					,  MAR_RATE = ifnull( #{mar_rate, jdbcType=VARCHAR} , '0')
+					,  APR_RATE = ifnull( #{apr_rate, jdbcType=VARCHAR} , '0')
+					,  MAY_RATE = ifnull( #{may_rate, jdbcType=VARCHAR} , '0')
+					,  JUN_RATE = ifnull( #{jun_rate, jdbcType=VARCHAR} , '0')
+					,  JUL_RATE = ifnull( #{jul_rate, jdbcType=VARCHAR} , '0')
+					,  AUG_RATE = ifnull( #{aug_rate, jdbcType=VARCHAR} , '0')
+					,  SEPT_RATE = ifnull( #{sept_rate, jdbcType=VARCHAR} , '0')
+					,  OCT_RATE = ifnull( #{oct_rate, jdbcType=VARCHAR} , '0')
+					,  NOV_RATE = ifnull( #{nov_rate, jdbcType=VARCHAR} , '0')
+					,  DEC_RATE = ifnull( #{dec_rate, jdbcType=VARCHAR} , '0')
+					,  MODIFY_DTTM = now()
+					,  MODIFY_ID =  #{modify_id, jdbcType = VARCHAR}              
+
+    	</insert>
+
+</mapper>

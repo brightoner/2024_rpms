@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.year.sales.dao.SalesDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 
+ <!-- 매출관리 list -->
+	<select id="selectSaleMngList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectSaleMngList */ 	
+		<include refid="getPagingSelect"></include>
+			SELECT  A.SALES_ID
+				  , A.SALES_ITEM_NM
+				  , A.SALES_REVENUE
+				  , A.SALES_CLIENT_NM
+				  , A.SALES_TRADE_DT
+				  , A.FILE_GROUP_SALES
+			  FROM  PTL_SALES_MNG A
+		 LEFT JOIN  PTL_YEAR_FOLLOW_SALES B 
+		        ON  A.SALES_ID = B.SALES_ID
+			   AND  B.PROJ_YEAR_ID = #{proj_year_id}
+		INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		     WHERE  1=1
+			   AND  B.YEAR_SALES_ID IS NULL
+		 <if test="searchword != null and searchword != ''">
+			<if test ="searchopt == 'item'">
+				  AND A.SALES_ITEM_NM like concat('%',#{searchword},'%')
+			</if>
+			<if test ="searchopt == 'name'">
+				  AND A.SALES_CLIENT_NM like concat('%',#{searchword},'%')
+			</if>
+		</if>
+ 	  ORDER BY  A.SALES_ITEM_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 매출관리 list count -->
+	<select id="selectSaleMngListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectSaleMngListCount */ 
+			SELECT  COUNT(1)
+			  FROM  PTL_SALES_MNG A
+		 LEFT JOIN  PTL_YEAR_FOLLOW_SALES B 
+		        ON  A.SALES_ID = B.SALES_ID
+			   AND  B.PROJ_YEAR_ID = #{proj_year_id}
+		     WHERE  1=1
+			   AND  B.YEAR_SALES_ID IS NULL
+		 <if test="searchword != null and searchword != ''">
+			<if test ="searchopt == 'item'">
+				  AND A.SALES_ITEM_NM like concat('%',#{searchword},'%')
+			</if>
+			<if test ="searchopt == 'name'">
+				  AND A.SALES_CLIENT_NM like concat('%',#{searchword},'%')
+			</if>
+		</if>
+	</select>
+ 
+ 
+ 
+ 
+	<!--  연차사후관리 매출 list -->
+	<select id="selectYearSalesList" parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearSalesList */
+	  SELECT  A.YEAR_SALES_ID
+		    , A.PROJ_YEAR_ID
+		    , A.SALES_ID
+		    , IFNULL(A.SALES_CONTRIBUTE, '') AS SALES_CONTRIBUTE 
+		    , A.CREATE_ID
+		    , A.CREATE_DTTM
+		    , A.MODIFY_ID
+		    , A.MODIFY_DTTM
+		    , B.SALES_ITEM_NM
+		    , B.SALES_REVENUE
+		    , B.SALES_CLIENT_NM
+		    , date_format(B.SALES_TRADE_DT , '%Y-%m-%d') as SALES_TRADE_DT
+		    , B.FILE_GROUP_SALES
+		    , GROUP_CONCAT(C.FILE_ID ORDER BY C.FILE_ID) AS FILE_IDS
+		    , GROUP_CONCAT(C.ORGN_FILE_NM ORDER BY C.FILE_ID) AS ORGN_FILE_NMS
+		FROM  PTL_YEAR_FOLLOW_SALES A
+  INNER JOIN  PTL_SALES_MNG B ON A.SALES_ID = B.SALES_ID
+   LEFT JOIN  PTL_ATCHFILE C ON B.FILE_GROUP_SALES = C.FILE_GROUP
+	   WHERE  A.PROJ_YEAR_ID = #{proj_year_id}
+	GROUP BY  A.YEAR_SALES_ID
+		    , A.PROJ_YEAR_ID
+		    , A.SALES_ID
+		    , A.SALES_CONTRIBUTE
+		    , A.CREATE_ID
+		    , A.CREATE_DTTM
+		    , A.MODIFY_ID
+		    , A.MODIFY_DTTM
+		    , B.SALES_ITEM_NM
+		    , B.SALES_REVENUE
+		    , B.SALES_CLIENT_NM
+		    , B.SALES_TRADE_DT
+		    , B.FILE_GROUP_SALES
+	</select>
+	
+	<!--  연차사후관리 매출 list count -->
+	<select id="selectYearSalesListCount" parameterType="java.util.Map"  resultType="integer">
+	/* selectYearSalesListCount */
+		SELECT  COUNT(1)
+		  FROM  PTL_YEAR_FOLLOW_SALES A
+	INNER JOIN  PTL_SALES_MNG B
+		    ON  A.SALES_ID =B.SALES_ID    
+		 WHERE  1=1
+		   AND  A.PROJ_YEAR_ID = #{proj_year_id}
+	</select>
+	
+	
+	<!-- 연차사후관리 매출 등록 -->
+	<insert id="insertYearSales" parameterType="java.util.Map">
+	/* insertYearSales */
+		INSERT INTO PTL_YEAR_FOLLOW_SALES (
+			      YEAR_SALES_ID
+			    , PROJ_YEAR_ID
+				, SALES_ID
+				, SALES_CONTRIBUTE
+				, CREATE_ID
+				, CREATE_DTTM
+			) VALUES (
+				NEXTVAL(PTL_YEAR_FOLLOW_SALES_SEQ)
+				, #{proj_year_id, jdbcType=VARCHAR}	
+				, #{sales_id, jdbcType=VARCHAR}	
+				, #{sales_contribute, jdbcType=VARCHAR}	
+				, #{create_id, jdbcType=VARCHAR}
+				, NOW()
+			)
+	</insert>
+	
+	
+	<!-- 연차사후관리 매출 업데이트 -->
+	<update id="updateYearSales" parameterType="java.util.Map">
+	/* updateYearSales */
+		UPDATE  PTL_YEAR_FOLLOW_SALES
+   		   SET  SALES_CONTRIBUTE = #{sales_contribute, jdbcType=VARCHAR}
+			  , MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+			  , MODIFY_DTTM = NOW()
+		 WHERE  1=1
+		   AND  YEAR_SALES_ID = #{year_sales_id}
+	</update>
+	
+	
+	<!-- 연차사후관리 매출 삭제 -->
+	<delete id="deleteYearSales" parameterType="java.util.Map">
+	/* deleteYearSales */
+		DELETE 
+		  FROM  PTL_YEAR_FOLLOW_SALES
+		 WHERE  1=1
+		   AND  YEAR_SALES_ID = #{year_sales_id}
+	</delete>
+	
+	
+	
+</mapper>

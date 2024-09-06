@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.commons.imgFile.dao.ImgFileDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A, 
+		     (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B     
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	
+		<insert id="insertFileMaster" parameterType="imgFileVo" >
+		<selectKey keyProperty="atch_img_id" resultType="string" order="BEFORE">
+	         SELECT CONCAT('IMG_' , LPAD(NEXTVAL(ptl_atch_img_seq),16,0 )) as atch_img_id FROM DUAL
+	    </selectKey>
+		
+			INSERT INTO PTL_ATCH_IMG
+			(
+				ATCH_IMG_ID 			 
+			  , REG_DATE
+			  , USE_YN
+			) VALUES( 
+			  #{atch_img_id, jdbcType = VARCHAR}	
+			, now()
+			, 'Y'
+			)			
+	
+	</insert>
+	
+	<insert id="insertFileDetail" parameterType="imgFileVo" >		
+		
+			INSERT INTO PTL_ATCH_IMG_DTL
+			(
+				ATCH_IMG_ID 
+			  , FILE_SN						 
+			  , ORIGNL_FILE_NM
+			  , FILE_EXTSN
+			  , FILE_SIZE			
+			  , FILE_BYTE			 
+			) VALUES( 
+				  #{atch_img_id, jdbcType = VARCHAR}
+				, #{file_sn, jdbcType = VARCHAR}
+				, #{orignl_file_nm , jdbcType = VARCHAR}
+				, #{file_extsn, jdbcType = VARCHAR}
+				, #{file_size, jdbcType = VARCHAR}
+				, #{file_byte, jdbcType = VARCHAR}		
+			)
+	</insert>
+	
+ 	<select id="selectImageFileList" parameterType="imgFileVo" resultType="imgFileVo" >
+		<![CDATA[
+		SELECT  A.ATCH_IMG_ID AS atch_img_id 		
+			 ,  B.FILE_SN AS file_sn
+			 ,  B.ORIGNL_FILE_NM	 AS orignl_file_nm			
+			 ,  B.FILE_EXTSN	 AS file_extsn			
+			 ,  B.FILE_SIZE AS file_size
+			 ,  B.FILE_BYTE AS file_byte
+			 ,  A.USE_YN  AS use_yn
+		  FROM  PTL_ATCH_IMG  A , PTL_ATCH_IMG_DTL B  
+		 WHERE  TRIM(A.ATCH_IMG_ID) = TRIM( #{atch_img_id, jdbcType = VARCHAR})
+		   AND 	TRIM(A.ATCH_IMG_ID) = TRIM(B.ATCH_IMG_ID)
+		   AND	UPPER(B.FILE_EXTSN) IN ('GIF','JPG','BMP','PNG')
+		   AND 	A.USE_YN = 'Y'				
+	  ORDER BY B.FILE_SN	
+		]]>
+	</select>	
+	
+	<select id="selectImgFileInf" parameterType="imgFileVo" resultType="imgFileVo" >
+ 		<![CDATA[
+			SELECT  ATCH_IMG_ID AS 	atch_img_id 		
+				 ,  FILE_SN AS file_sn
+				 ,  ORIGNL_FILE_NM	 AS orignl_file_nm			
+				 ,  FILE_EXTSN	 AS file_extsn			
+				 ,  FILE_SIZE AS file_size
+				 ,  FILE_BYTE AS file_byte			
+			  FROM  PTL_ATCH_IMG_DTL
+		     WHERE  Trim(ATCH_IMG_ID) = TRIM( #{atch_img_id, jdbcType = VARCHAR})
+			   AND  FILE_SN =  #{file_sn, jdbcType = VARCHAR}
+ 		]]>
+ 	</select>
+	
+	<update id="deleteAllImgFileInf" parameterType="imgFileVo" >
+		<![CDATA[
+			UPDATE PTL_ATCH_IMG
+			   SET USE_YN = 'N'
+		     WHERE Trim(ATCH_IMG_ID) = #{atch_img_id, jdbcType = VARCHAR}
+		]]>
+	</update>
+	
+</mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.center.noti.dao.NotiDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, A.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) A		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+	<select id="selectNotiList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	 	<include refid="getPagingSelect"></include>
+ 	/* selectNotiList */ 	
+	 SELECT  A.noti_id
+		  ,  A.noti_title
+		  ,  A.noti_contents
+		  ,  A.rdcnt
+		  ,  A.top_status
+		  ,  A.atch_link_id
+		  ,  A.create_dttm
+		  ,  A.modify_dttm
+		  ,  A.create_id
+		  ,  A.modify_id		 		  
+ 	  FROM (
+		 SELECT  a.noti_id
+			  ,  a.noti_title
+			  ,  a.noti_contents
+			  ,  a.rdcnt
+			  ,  a.top_status
+			  , ''   AS ATCH_LINK_ID
+			  ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			  ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			  ,  a.create_id
+			  ,  a.modify_id		 		  		 
+		   FROM  PTL_NOTI a 
+		  WHERE  1 = 1		
+		    AND TOP_STATUS = '1'
+		    AND DEL_YN = 'N'
+		  	<if test='searchopt == "pu_subject" ' >
+		    	AND a.noti_title like concat('%',#{searchword},'%')
+			</if>	
+	UNION ALL	    
+	 	 SELECT  a.noti_id
+			  ,  a.noti_title
+			  ,  a.noti_contents
+			  ,  a.rdcnt
+			  ,  a.top_status
+			  ,  ''  AS ATCH_LINK_ID
+			  ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			  ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			  ,  a.create_id
+			  ,  a.modify_id		 		  		 
+		   FROM  PTL_NOTI a   
+		  WHERE  1 = 1		
+		    AND TOP_STATUS = '0'	 
+		    AND DEL_YN = 'N'   
+		    <if test='searchopt == "pu_subject" ' >
+		    	AND a.noti_title like concat('%',#{searchword},'%')
+			</if>	
+		    ) A , 	(SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B     
+			 ORDER BY A.TOP_STATUS desc , A.noti_id DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<select id="selectNotiTotalCount"  parameterType="java.util.Map"  resultType="integer">
+		SELECT count(*) as cnt   		  		  	
+		FROM
+		    PTL_NOTI
+		WHERE 1 = 1		
+		  AND DEL_YN = 'N'
+		<if test='searchopt == "pu_subject" ' >
+		    AND noti_title like concat('%',#{searchword},'%')
+		</if>
+		
+	
+	</select>
+	
+	
+	<select id="selectNotiDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+		SELECT  a.noti_id
+			 ,  a.noti_title
+			 ,  a.noti_contents
+			 ,  a.rdcnt
+			 ,  a.top_status
+			 ,  a.atch_link_id			  
+			 ,  date_format(a.create_dttm,'%Y-%m-%d') AS create_dttm
+			 ,  date_format(a.modify_dttm,'%Y-%m-%d') AS modify_dttm
+			 ,  a.create_id
+			 ,  a.modify_id			  	
+	 	  FROM  PTL_NOTI a 
+		 WHERE  1=1
+		 AND a.DEL_YN = 'N' 
+		 AND a.noti_id=  #{noti_id, jdbcType=INTEGER}
+	</select>	
+	
+	
+	<update id="updateNotiViewCnt" parameterType="java.util.Map">
+		<![CDATA[
+		UPDATE PTL_NOTI
+	       SET RDCNT = RDCNT +1
+	     WHERE TRIM(NOTI_ID) = TRIM(#{noti_id, jdbcType=INTEGER})
+ 			
+		]]>
+	</update>
+	
+	
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.year.ip.dao.IpMngDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연차사후관리 지적재산권 list -->
+	<select id="selectYearIpList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectYearIpList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.YEAR_IP_ID
+			  , A.PROJ_YEAR_ID
+			  , A.YEAR_IP_NM
+			  , A.YEAR_IP_NO
+			  , DATE_FORMAT(A.YEAR_IP_DT,'%Y-%m-%d') AS YEAR_IP_DT
+			  , A.YEAR_IP_GB
+			  , A.YEAR_IP_DOMESTIC_GB
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_YEAR_FOLLOW_IP A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+ 		 WHERE  1=1  
+ 		   AND  A.PROJ_YEAR_ID = #{proj_year_id}
+ 	  ORDER BY  A.YEAR_IP_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연차사후관리 지적재산권 count -->
+	<select id="selectYearIpListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectYearIpListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_YEAR_FOLLOW_IP
+ 		 WHERE  1=1  
+ 		   AND  PROJ_YEAR_ID = #{proj_year_id}
+	</select>
+	
+	
+	<!-- 연차사후관리 지적재산권 상세보기 -->
+	<select id="selectYearIpDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectYearIpDtl */
+		SELECT  YEAR_IP_ID
+			  , PROJ_YEAR_ID
+			  , YEAR_IP_NM
+			  , YEAR_IP_NO
+			  , DATE_FORMAT(YEAR_IP_DT,'%Y-%m-%d') AS YEAR_IP_DT
+			  , YEAR_IP_GB
+			  , YEAR_IP_DOMESTIC_GB
+			  , DATE_FORMAT(CREATE_ID,'%Y-%m-%d') AS CREATE_ID
+			  , CREATE_DTTM
+			  , DATE_FORMAT(MODIFY_ID,'%Y-%m-%d') AS MODIFY_ID
+			  , MODIFY_DTTM
+ 		  FROM  PTL_YEAR_FOLLOW_IP
+		 WHERE  1=1
+		   AND  YEAR_IP_ID = #{year_ip_id} 
+	</select>	
+	
+	
+	<!-- 연차사후관리 지적재산권 등록 -->
+	<insert id="insertYearIp" parameterType="java.util.Map">
+	/* insertYearIp */
+		 INSERT INTO PTL_YEAR_FOLLOW_IP (
+					  YEAR_IP_ID
+					, PROJ_YEAR_ID
+					, YEAR_IP_NM
+					, YEAR_IP_NO
+					, YEAR_IP_DT
+					, YEAR_IP_GB
+					, YEAR_IP_DOMESTIC_GB
+					, CREATE_ID
+					, CREATE_DTTM
+				) VALUES (
+					<choose>
+						<when test="year_ip_id != null and year_ip_id != ''">
+							#{year_ip_id, jdbcType=VARCHAR}	
+						</when>		
+						<otherwise>
+							NEXTVAL(PTL_YEAR_FOLLOW_IP_SEQ)
+						</otherwise>			
+					</choose>
+					, #{proj_year_id_ip, jdbcType=VARCHAR}	
+					, #{year_ip_nm, jdbcType=VARCHAR}
+					, #{year_ip_no, jdbcType=VARCHAR}
+					, (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					       ELSE DATE_FORMAT(STR_TO_DATE(#{year_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+					  end) 
+					, #{year_ip_gb, jdbcType=VARCHAR}
+					, #{year_ip_domestic_gb, jdbcType=VARCHAR}
+					, #{create_id, jdbcType=VARCHAR}
+					, NOW()
+				) ON DUPLICATE KEY UPDATE
+					  YEAR_IP_NM = #{year_ip_nm, jdbcType=VARCHAR}	
+					, YEAR_IP_NO = #{year_ip_no, jdbcType=VARCHAR}
+					, YEAR_IP_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{year_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					       				ELSE DATE_FORMAT(STR_TO_DATE(#{year_ip_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+					  			   END) 
+					, YEAR_IP_GB = #{year_ip_gb, jdbcType=VARCHAR}
+					, YEAR_IP_DOMESTIC_GB = #{year_ip_domestic_gb, jdbcType=VARCHAR}
+					, MODIFY_ID = #{create_id, jdbcType=VARCHAR}
+					, MODIFY_DTTM = NOW() 
+    </insert>
+    
+    
+    <!-- 연차사후관리 지적재산권 삭제 -->
+	<delete id="deleteYearIp" parameterType="java.util.Map">
+	/* deleteYearIp */
+		DELETE
+		  FROM  PTL_YEAR_FOLLOW_IP
+		 WHERE  1=1
+		   AND  YEAR_IP_ID = #{year_ip_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

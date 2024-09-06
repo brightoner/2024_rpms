@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.apply.ann.dao.AnnDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 공고현황 전체 list -->
+	<select id="selectAnnList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectAnnList */ 	
+	<include refid="getPagingSelect"></include>
+		SELECT  ANN_ID
+		 	  , ANN_NM
+		 	  , DATE_FORMAT(ANN_DT,'%Y-%m-%d') AS ANN_DT 
+		 	  , DEPT_ORG
+		 	  , DDCT_ORG
+		 	  , ANN_INFO
+		 	  , DATE_FORMAT(RCPT_STRTDT,'%Y-%m-%d') AS RCPT_STRTDT
+		 	  , DATE_FORMAT(RCPT_ENDDT,'%Y-%m-%d') AS RCPT_ENDDT
+		 	  , FILE_GROUP
+		 	  , DEL_YN
+		 	  , CREATE_ID
+		 	  , DATE_FORMAT(CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_ANNOUNCE, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) B
+		 WHERE  1=1
+		   AND  DEL_YN = 'N'
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+		  AND  SUBSTRING(ANN_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  ANN_NM LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	 ORDER BY  ANN_ID DESC
+		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 공고현황 전체 list count -->
+	<select id="selectAnnListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectAnnListCount */ 
+		 SELECT  COUNT(1) AS CNT
+	       FROM  PTL_ANNOUNCE 
+	 	  WHERE  1 =1 
+	 	    AND  DEL_YN = 'N'
+	 	<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+		  AND  SUBSTRING(ANN_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  ANN_NM LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 공고현황 등록 -->
+	<insert id="insertAnn" parameterType="java.util.Map">
+	/* insertAnn */
+	<selectKey keyProperty="ann_id" resultType="string" order="BEFORE">
+       (SELECT CONCAT('ANN_' , LPAD(NEXTVAL(PTL_ANNOUNCE_SEQ),16,0 )) FROM DUAL)
+	</selectKey>
+		INSERT INTO PTL_ANNOUNCE (
+			  ANN_ID
+			, ANN_NO
+			, ANN_NM
+			, ANN_DT
+			, DEPT_ORG
+			, DDCT_ORG
+			, ANN_INFO
+			, RCPT_STRTDT
+			, RCPT_ENDDT
+			, DEL_YN
+			, CREATE_ID
+			, CREATE_DTTM
+			, FILE_GROUP
+		) VALUES (
+			  #{ann_id}
+			, #{ann_no,  jdbcType = VARCHAR}
+			, #{ann_nm,  jdbcType = VARCHAR}
+			, (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{ann_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					ELSE DATE_FORMAT(STR_TO_DATE(#{ann_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			   END)
+			, #{dept_org,  jdbcType = VARCHAR}
+			, #{ddct_org,  jdbcType = VARCHAR}
+			, #{ann_info,  jdbcType = VARCHAR}
+			, (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{rcpt_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					ELSE DATE_FORMAT(STR_TO_DATE(#{rcpt_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			   END)
+			, (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{rcpt_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+					ELSE DATE_FORMAT(STR_TO_DATE(#{rcpt_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			   END)
+			, 'N'
+			, #{create_id, jdbcType = VARCHAR}
+			, now()
+			, #{file_group,  jdbcType = VARCHAR}
+		)
+	</insert>
+	
+	<!-- 공고현황 상세보기 -->
+	<select id="selectAnnDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectAnnDtl */
+	   SELECT  ANN_ID
+			 , ANN_NO
+			 , ANN_NM
+			 , DATE_FORMAT(ANN_DT,'%Y-%m-%d') AS ANN_DT 
+			 , DEPT_ORG
+			 , DDCT_ORG
+			 , ANN_INFO
+			 , DATE_FORMAT(RCPT_STRTDT,'%Y-%m-%d') AS RCPT_STRTDT
+			 , DATE_FORMAT(RCPT_ENDDT,'%Y-%m-%d') AS RCPT_ENDDT
+			 , FILE_GROUP
+			 , DEL_YN
+			 , CREATE_ID
+			 , FN_USER_KEY_INFO(CREATE_ID , 'NM') AS USERNAME
+			 , DATE_FORMAT(CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		 FROM  PTL_ANNOUNCE
+		WHERE  1 =1 
+		  AND  ANN_ID = #{ann_id} 
+		  AND  DEL_YN = 'N'
+	</select>	
+	
+	<!-- 공고현황 수정 -->
+	<update id="updateAnn" parameterType="java.util.Map">
+	/* updateAnn */
+		UPDATE  PTL_ANNOUNCE
+           SET  ANN_NO = #{ann_no,  jdbcType = VARCHAR}
+		      , ANN_NM = #{ann_nm,  jdbcType = VARCHAR}
+		      , ANN_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{ann_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+							   ELSE DATE_FORMAT(STR_TO_DATE(#{ann_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+						  END)
+		      , DEPT_ORG = #{dept_org,  jdbcType = VARCHAR}
+		      , DDCT_ORG = #{ddct_org,  jdbcType = VARCHAR}
+		      , ANN_INFO = #{ann_info,  jdbcType = VARCHAR}
+		      , RCPT_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{rcpt_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+								    ELSE DATE_FORMAT(STR_TO_DATE(#{rcpt_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+							   END)
+		      , RCPT_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{rcpt_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+								   ELSE DATE_FORMAT(STR_TO_DATE(#{rcpt_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+							  END)
+		      , MODIFY_ID = #{modify_id,  jdbcType = VARCHAR}
+		      , MODIFY_DTTM = NOW()
+		      , FILE_GROUP = #{file_group,  jdbcType = VARCHAR}
+		 WHERE  1=1
+		   AND  DEL_YN = 'N'
+		   AND  ANN_ID = #{ann_id}
+	</update>
+	
+	
+	<!-- 공고현황 삭제시 확인 -->
+	<select id="chkAnnId" parameterType="java.util.Map" resultType="int">
+	/* "chkAnn_id" */
+	SELECT  COUNT(1)
+      FROM  PTL_ANNOUNCE A
+     INNER  JOIN PTL_PROJECT B
+        ON  A.ANN_ID = B.ANN_ID
+     WHERE  1=1
+       AND  A.ANN_ID = #{ann_id}
+       AND  A.DEL_YN = 'N'
+	</select>
+	
+		
+	<!-- 공고현황 삭제 -->
+	<update id="deleteAnn" parameterType="java.util.Map">
+	/* deleteAnn */
+		 UPDATE  PTL_ANNOUNCE
+		    SET  DEL_YN = 'Y'
+		  WHERE  1=1
+		    AND  DEL_YN = 'N'
+		    AND  ANN_ID = #{ann_id}
+	</update>
+	
+	
+	
+
+	
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.member.regi.dao.PtlUserRegDao">
+
+
+	<!-- 닉네임 중복체크  -->
+	<select id="selectNicknmCheck" resultType="int" parameterType="String">
+	/* ptlUserRegDao.selectNicknmCheck */
+	    SELECT count(*) as cnt
+	      FROM PTL_USER
+	     WHERE NICKNM =  #{nicknm}
+	</select>
+
+
+
+	<!-- 회원가입 -->
+	<insert id="insertPtlUserReg" parameterType="ptlUserRegVo">
+	/* ptlUserRegDao.insertPtlUserReg */
+		<![CDATA[
+			INSERT INTO PTL_USER 
+				 (   EMPLYRKEY
+				  ,  USER_ID
+				  ,  NICKNM			
+				  ,  PASSWORD
+				  ,  MBTLNUM
+				  ,  MBTLNUM_YN
+				  ,  EMAIL
+				  ,  ORGNM
+				  ,  DEPTNM
+				  ,  POSNM
+				  ,  CLASSIFY
+				  ,  LASTLOGINDT
+				  ,  LASTUPDDT
+				  ,  AGREE
+				  ,  SMSAGREE
+				  ,  EMAILAGREE
+		) VALUES ( 
+			         #{emplyrkey,  jdbcType = VARCHAR}
+				  ,  #{user_id,  jdbcType = VARCHAR}
+				  ,  #{nicknm,  jdbcType = VARCHAR}
+				  ,  #{password,  jdbcType = VARCHAR}
+				  ,  #{mbtlnum,  jdbcType = VARCHAR}
+				  ,  #{mbtlnum_yn,  jdbcType = VARCHAR}
+				  ,  #{email,  jdbcType = VARCHAR}
+				  ,  #{orgnm,  jdbcType = VARCHAR}
+				  ,  #{deptnm,  jdbcType = VARCHAR}
+				  ,  #{posnm,  jdbcType = VARCHAR}
+				  ,  #{classify,  jdbcType = VARCHAR}
+				  ,  NOW()
+				  ,  NOW()
+				  ,  #{agree,  jdbcType = VARCHAR}
+				  ,  #{smsAgree,  jdbcType = VARCHAR}
+				  ,  #{emailAgree,  jdbcType = VARCHAR}
+				  )
+		]]>
+	</insert>
+	
+	
+	
+</mapper>

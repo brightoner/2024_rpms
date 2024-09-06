@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.mng.lang.dao.MngLangDao">
+
+  <!-- URL 권한  관리 - URL 권한 저장 -->
+<insert id="insertLang" parameterType="mngLangVo">
+   INSERT INTO 
+        PTL_LANG_MNG  /* URL관리 */ 
+        ( 
+          SEQ
+		, PAGE_ID
+		, TAG_GBN
+		, TAG
+		, TAG_VAL_KO
+		, TAG_VAL_ENG
+     ) 
+ VALUES 
+     ( 
+     	  (SELECT nvl(MAX(SEQ) + 1, 1)
+     	     FROM PTL_LANG_MNG a
+     	  ) 	/*lang 순번*/
+        , #{page_id}    /* page_id */ 
+        , #{tag_gbn}    /* 태그구분 */ 
+        , #{tag}    /* 태그명 */ 
+        , #{tag_val_ko}    /* 한글값 */ 
+        , #{tag_val_eng}    /* 영문값 */ 
+     ) 
+</insert>
+
+<select id="selectLang" parameterType="mngLangVo" resultType="mngLangVo">
+    SELECT 
+          seq
+		, page_id
+		, tag_gbn
+		, tag
+		, tag_val_ko
+		, tag_val_eng
+    FROM PTL_LANG_MNG  a 
+ WHERE 1=1
+ 	<if test="page_id != null and page_id != '' ">
+ 		AND a.PAGE_ID = #{page_id} 
+ 	</if>
+ 	 and 	PAGE_ID!='common'
+union all
+     SELECT 
+          seq
+		, page_id
+		, tag_gbn
+		, tag
+		, tag_val_ko
+		, tag_val_eng
+    FROM PTL_LANG_MNG  a 
+ WHERE 1=1
+   and 	PAGE_ID='common'
+ORDER BY seq   
+   
+</select>
+
+<update id="updateLang" parameterType="mngLangVo">
+  UPDATE 
+        PTL_LANG_MNG  /* URL관리 */ 
+ SET 
+      tag_gbn =  #{tag_gbn, jdbcType = VARCHAR}    /* 권한구분 */ 
+    , tag =  #{tag, jdbcType = VARCHAR}    /* URL경로 */ 
+    , tag_val_ko =  #{tag_val_ko, jdbcType = VARCHAR}    /* URL설명 */ 
+    , tag_val_eng =  #{tag_val_eng, jdbcType = VARCHAR}    /* URL설명 */ 
+ WHERE 1=1
+	<if test="seq != null and seq !=''">
+		AND seq = #{seq, jdbcType = VARCHAR} 
+	</if>
+</update>
+
+<delete id="deleteUrlAuth" parameterType="mngAuthVo">
+	DELETE FROM PTL_URL_MNGT a
+	WHERE 1=1
+	  	AND a.seq = #{url_seq}
+
+</delete>
+
+
+</mapper>

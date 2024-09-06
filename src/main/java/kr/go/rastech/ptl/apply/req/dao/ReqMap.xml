@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.apply.req.dao.ReqDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 연구과제 신청 전체 list -->
+	<select id="selectReqList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectReqList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT A.ANN_ID
+		  	 , A.ANN_NM
+		  	 , DATE_FORMAT(A.ANN_DT,'%Y-%m-%d') AS ANN_DT 
+		  	 , A.DEPT_ORG
+		  	 , A.DDCT_ORG
+		  	 , A.ANN_INFO
+		  	 , DATE_FORMAT(A.RCPT_STRTDT,'%Y-%m-%d') AS RCPT_STRTDT
+		   	 , DATE_FORMAT(A.RCPT_ENDDT,'%Y-%m-%d') AS RCPT_ENDDT
+		  	 , A.FILE_GROUP
+		  	 , A.DEL_YN
+		  	 , IFNULL(B.PROJ_ID, '') as PROJ_ID
+		  	 , B.PROJ_RECPT_NO
+		  	 , B.PROJ_TYPE_CD
+		  	 , B.RND_GB
+		  	 , B.TECH_CLS_CD1
+		  	 , B.WEIGHT1
+		  	 , B.TECH_CLS_CD2
+		  	 , B.WEIGHT2
+		  	 , B.TECH_CLS_CD3
+		  	 , B.WEIGHT3
+		  	 , B.SECURTY_LEVL_CD
+		  	 , DATE_FORMAT(B.REQ_DT,'%Y-%m-%d') AS REQ_DT
+		     , B.PROJ_NM_KOR
+		     , B.PROJ_NM_ENG
+		     , B.LEAD_ORG_CD
+		     , DATE_FORMAT(B.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(B.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , DATE_FORMAT(B.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+		     , DATE_FORMAT(B.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+		     , DATE_FORMAT(B.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+		     , DATE_FORMAT(B.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+		     , DATE_FORMAT(B.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+		     , DATE_FORMAT(B.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+		     , B.TOT_COST
+		     , B.GOV_COST
+		     , B.CASH
+		     , B.STOCK
+		     , B.REQ_GB
+		     , (CASE WHEN B.REQ_GB = '0' OR B.REQ_GB IS NULL THEN '미신청'
+			 		 ELSE '신청완료' END ) AS REQ_GB_NM 
+		     , DATE_FORMAT(B.REG_DT,'%Y-%m-%d') AS REG_DT
+		     , B.SEL_GB
+		     , (CASE WHEN B.SEL_GB = '0' OR B.SEL_GB IS NULL THEN '결과등록'
+			 		 WHEN B.SEL_GB = '1' THEN '선정'
+			 		 ELSE '탈락' END ) AS SEL_GB_NM 
+		     , DATE_FORMAT(B.SEL_DT,'%Y-%m-%d') AS SEL_DT
+		     , B.SEL_INFO
+		     , B.AGMT_GB
+		     , (CASE WHEN B.AGMT_GB = '0' OR B.AGMT_GB IS NULL THEN '미협약'
+			 		 ELSE '협약' END ) AS AGMT_GB_NM 
+		     , DATE_FORMAT(B.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+		     , B.AGMT_INFO
+		     , B.CREATE_ID
+		     , DATE_FORMAT(B.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		 FROM  PTL_ANNOUNCE A
+    LEFT JOIN  PTL_PROJECT B
+		   ON  A.ANN_ID = B.ANN_ID 
+		  AND  B.DEL_YN='N' 
+   INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  A.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  A.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+<!-- 		  AND  SUBSTRING(A.ANN_DT, 1, 4) = #{searchoption3} -->
+		  AND  SUBSTRING(B.REQ_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchoption4 != null and searchoption4 !=''">
+			<if test='searchoption4 == "1"'>
+				AND  B.REQ_GB = #{searchoption4}
+			</if>
+			<if test='searchoption4 == "0"'>
+				AND  B.REQ_GB = '0' || B.REQ_GB IS NULL
+			</if>
+		</if>
+		<if test="searchoption5 != null and searchoption5 !=''">
+		  AND  B.SEL_GB = #{searchoption5}
+		</if>
+		<if test="searchoption6 != null and searchoption6 !=''">
+		  AND  B.AGMT_GB = #{searchoption6}
+		</if>
+		<if test="searchword1 != null and searchword1 !=''">
+		  AND  A.ANN_NM LIKE CONCAT('%', #{searchword1}, '%')
+		</if>
+		<if test="searchword2 != null and searchword2 !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword2}, '%')
+		</if>
+	 ORDER BY  A.ANN_ID DESC
+		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 연구과제 신청 전체 list count -->
+	<select id="selectReqListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectReqListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_ANNOUNCE A
+     LEFT JOIN  PTL_PROJECT B
+		    ON  A.ANN_ID = B.ANN_ID 
+		   AND  B.DEL_YN='N' 
+		 WHERE  1=1
+		   AND  A.DEL_YN ='N'
+		<if test="searchoption1 != null and searchoption1 !=''">
+		  AND  A.DEPT_ORG = #{searchoption1}
+		</if>
+		<if test="searchoption2 != null and searchoption2 !=''">
+		  AND  A.DDCT_ORG = #{searchoption2}
+		</if>
+		<if test="searchoption3 != null and searchoption3 !=''">
+		  AND  SUBSTRING(A.ANN_DT, 1, 4) = #{searchoption3}
+		</if>
+		<if test="searchoption4 != null and searchoption4 !=''">
+			<if test='searchoption4 == "1"'>
+				AND  B.REQ_GB = #{searchoption4}
+			</if>
+			<if test='searchoption4 == "0"'>
+				AND  B.REQ_GB = '0' || B.REQ_GB IS NULL
+			</if>
+		</if>
+		<if test="searchoption5 != null and searchoption5 !=''">
+		  AND  B.SEL_GB = #{searchoption5}
+		</if>
+		<if test="searchoption6 != null and searchoption6 !=''">
+		  AND  B.AGMT_GB = #{searchoption6}
+		</if>
+		<if test="searchword1 != null and searchword1 !=''">
+		  AND  A.ANN_NM LIKE CONCAT('%', #{searchword1}, '%')
+		</if>
+		<if test="searchword2 != null and searchword2 !=''">
+		  AND  B.PROJ_NM_KOR LIKE CONCAT('%', #{searchword2}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 연구과제 신청 등록 -->
+	<insert id="insertReq" parameterType="java.util.Map">
+	/* insertReq */
+	<selectKey keyProperty="proj_id" resultType="string" order="BEFORE">
+       (SELECT CONCAT('PROJ_' , LPAD(NEXTVAL(PTL_PROJECT_SEQ),15,0 )) FROM DUAL)
+	</selectKey>
+		INSERT INTO PTL_PROJECT (
+            PROJ_ID
+		  , ANN_ID
+		  , PROJ_RECPT_NO
+		  , PROJ_TYPE_CD
+		  , RND_GB
+		  , TECH_CLS_CD1
+		  , WEIGHT1
+		  , TECH_CLS_CD2
+		  , WEIGHT2
+		  , TECH_CLS_CD3
+		  , WEIGHT3
+		  , SECURTY_LEVL_CD
+		  , REQ_DT
+		  , PROJ_NM_KOR
+		  , PROJ_NM_ENG
+		  , LEAD_ORG_CD
+		  , PERFORM_STRTDT
+		  , PERFORM_ENDDT
+		  , STEP1_STRTDT
+		  , STEP1_ENDDT
+		  , STEP2_STRTDT
+		  , STEP2_ENDDT
+		  , STEP3_STRTDT
+		  , STEP3_ENDDT
+		  , TOT_COST
+		  , GOV_COST
+		  , CASH
+		  , STOCK
+		  , REQ_GB
+		  , REG_DT
+		  , SEL_GB
+		  , AGMT_GB
+		  , DEL_YN
+		  , CREATE_ID
+		  , CREATE_DTTM
+		) VALUES (
+	        #{proj_id}
+		  , #{ann_id,  jdbcType = VARCHAR}
+		  , #{proj_recpt_no,  jdbcType = VARCHAR}
+		  , #{proj_type_cd}
+		  , #{rnd_gb}
+		  , #{tech_cls_cd1}
+		  , #{weight1}
+		  , #{tech_cls_cd2}
+		  , #{weight2}
+		  , #{tech_cls_cd3}
+		  , #{weight3}
+		  , #{securty_levl_cd}
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{req_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{req_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , #{proj_nm_kor,  jdbcType = VARCHAR}
+		  , #{proj_nm_eng,  jdbcType = VARCHAR}
+		  , #{lead_org_cd,  jdbcType = VARCHAR}
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{perform_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{perform_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{perform_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{perform_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step1_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step1_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step1_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step1_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step2_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step2_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step2_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step2_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step3_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step3_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step3_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{step3_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , #{tot_cost_val,  jdbcType = VARCHAR}
+		  , #{gov_cost_val,  jdbcType = VARCHAR}
+		  , #{cash_val,  jdbcType = VARCHAR}
+		  , #{stock_val,  jdbcType = VARCHAR}
+		  , '1'
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{reg_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{reg_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+			 END)
+		  , '0'
+		  , '0'
+		  , 'N'
+		  , #{create_id,  jdbcType = VARCHAR}
+		  , NOW()
+		)
+	</insert>
+	
+	<!-- 연구과제 등록시 참여기관 등록 -->
+	<insert id="insertPartOrg" parameterType="java.util.Map">
+	/* insertPartOrg */
+		INSERT INTO PTL_PARTICIPATE_ORG
+			(  PART_ORG_ID
+			 , PROJ_ID
+			 , SUB_PART_ORG_ID
+			 , PART_ORG_CD
+			 , DEL_YN
+		    ) VALUES (
+		       (SELECT CONCAT('PART_' , LPAD(NEXTVAL(PTL_PARTICIPATE_ORG_SEQ),15,0 )) FROM DUAL)
+			 , #{proj_id}
+			 , #{sub_part_org_id}
+			 , #{part_org_cd}
+			 , 'N'
+		    )
+	</insert>
+	
+	
+	<!-- 연구과제 등록시 책임자 등록 -->
+	<insert id="insertRespPerson" parameterType="java.util.Map">
+	/* insertRespPerson */
+		INSERT INTO PTL_RESPONSIBLE_PERSON
+			(  RESP_ID
+			 , PROJ_ID
+			 , SUB_RESP_ID
+			 , RESP_CD
+			 , RESP_GB
+			 , DEL_YN
+		    ) VALUES (
+		       (SELECT CONCAT('RES_' , LPAD(NEXTVAL(PTL_RESPONSIBLE_PERSON_SEQ),16,0 )) FROM DUAL)
+			 , #{proj_id}
+			 , #{sub_resp_id}
+			 , #{resp_cd}
+			 , #{resp_gb}
+			 , 'N'
+		    )
+	</insert>
+	
+	
+	
+	
+	<!-- 연구과제 신청 상세보기 -->
+	<select id="selectReqDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectReqDtl */
+		SELECT A.ANN_ID
+		  	 , A.ANN_NO
+		  	 , A.ANN_NM
+		  	 , DATE_FORMAT(A.ANN_DT,'%Y-%m-%d') AS ANN_DT 
+		  	 , A.DEPT_ORG
+		  	 , A.DDCT_ORG
+		  	 , A.ANN_INFO
+		  	 , DATE_FORMAT(A.RCPT_STRTDT,'%Y-%m-%d') AS RCPT_STRTDT
+		   	 , DATE_FORMAT(A.RCPT_ENDDT,'%Y-%m-%d') AS RCPT_ENDDT
+		  	 , A.FILE_GROUP
+		  	 , A.DEL_YN
+		  	 , IFNULL(B.PROJ_ID, '') as PROJ_ID
+		  	 , B.PROJ_RECPT_NO
+		  	 , B.PROJ_TYPE_CD
+		  	 , B.RND_GB
+		  	 , B.TECH_CLS_CD1
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD1 ) AS TECH_CLS_NM1
+		  	 , B.WEIGHT1
+		  	 , B.TECH_CLS_CD2
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD2 ) AS TECH_CLS_NM2
+		  	 , B.WEIGHT2
+		  	 , B.TECH_CLS_CD3
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = B.TECH_CLS_CD3 ) AS TECH_CLS_NM3
+		  	 , B.WEIGHT3
+		  	 , B.SECURTY_LEVL_CD
+		  	 , DATE_FORMAT(B.REQ_DT,'%Y-%m-%d') AS REQ_DT
+		     , B.PROJ_NM_KOR
+		     , B.PROJ_NM_ENG
+		     , B.LEAD_ORG_CD
+		     , C.ORG_NM 
+		     , C.ORG_CRM_NO 
+		     , C.ORG_ADDRESS 
+		     , DATE_FORMAT(B.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(B.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , DATE_FORMAT(B.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+		     , DATE_FORMAT(B.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+		     , DATE_FORMAT(B.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+		     , DATE_FORMAT(B.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+		     , DATE_FORMAT(B.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+		     , DATE_FORMAT(B.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+		     , B.TOT_COST
+		     , B.GOV_COST
+		     , B.CASH
+		     , B.STOCK
+		     , B.REQ_GB
+		     , (CASE WHEN B.REQ_GB = '0' OR B.REQ_GB IS NULL THEN '미신청'
+			 		 ELSE '신청완료' END ) AS REQ_GB_NM 
+		     , DATE_FORMAT(B.REG_DT,'%Y-%m-%d') AS REG_DT
+		     , B.SEL_GB
+		     , DATE_FORMAT(B.SEL_DT,'%Y-%m-%d') AS SEL_DT
+		     , B.SEL_INFO
+		     , B.AGMT_GB
+		     , DATE_FORMAT(B.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+		     , B.AGMT_INFO
+		     , B.CREATE_ID
+		     , FN_USER_KEY_INFO(B.CREATE_ID , 'NM') AS USERNAME
+		     , DATE_FORMAT(B.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		 FROM  PTL_ANNOUNCE A
+    LEFT JOIN  PTL_PROJECT B
+		   ON  A.ANN_ID = B.ANN_ID
+		  AND  B.DEL_YN='N' 
+	LEFT JOIN  PTL_ORG_MNG C
+		   ON  B.LEAD_ORG_CD = C.ORG_ID  
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  A.ANN_ID = #{ann_id}
+		<if test='proj_id != ""  and proj_id != null' >
+		  AND  B.PROJ_ID = #{proj_id} 
+		</if>		  
+	</select>	
+	
+	<!-- 연구과제 신청 상세보기 시 참여기관 select -->
+	<select id="selectPartOrg"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectPartOrg */
+		select  A.PART_ORG_ID 
+		      , A.PROJ_ID 
+		      , A.SUB_PART_ORG_ID 
+		      , A.PART_ORG_CD 
+		      , A.DEL_YN 
+		      , B.ORG_GB 
+		      , B.ORG_NM 
+		      , B.ORG_CRM_NO 
+		      , B.ORG_ADDRESS
+	      FROM  PTL_PARTICIPATE_ORG A
+	 LEFT JOIN  PTL_ORG_MNG B
+            ON  A.PART_ORG_CD = B.ORG_ID
+		 WHERE  1=1 
+		   AND  A.PROJ_ID = #{proj_id}
+	</select>
+	
+	<!-- 연구과제 신청 상세보기 시 책임자 select -->
+	<select id="selectLRespPerson"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectLRespPerson */
+		SELECT A.RESP_ID 
+			 , A.PROJ_ID 
+			 , A.SUB_RESP_ID 
+			 , A.RESP_CD 
+			 , A.RESP_GB 
+			 , A.DEL_YN
+			 , B.RESP_NM 
+			 , B.RESP_BIRTH 
+			 , B.RESP_ORG 
+			 , B.RESP_DEPT 
+			 , B.RESP_DEPT 
+			 , B.RESP_POSITION 
+			 , B.RESP_EMAIL 
+			 , B.RESP_EMAIL 
+			 , B.RESP_MBTLNUM 
+		 FROM  PTL_RESPONSIBLE_PERSON A, PTL_RESP_MNG B
+		WHERE  A.RESP_CD = B.RESP_ID 
+		  AND  A.PROJ_ID = #{proj_id}
+		  AND  RESP_GB = 'L'
+	</select>
+	
+	<!-- 연구과제 신청 상세보기 시 실무책임자 select -->
+	<select id="selectRespPerson"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectRespPerson */
+		SELECT A.RESP_ID 
+			 , A.PROJ_ID 
+			 , A.SUB_RESP_ID 
+			 , A.RESP_CD 
+			 , A.RESP_GB 
+			 , A.DEL_YN
+			 , B.RESP_NM 
+			 , B.RESP_BIRTH 
+			 , B.RESP_ORG 
+			 , B.RESP_DEPT 
+			 , B.RESP_DEPT 
+			 , B.RESP_POSITION 
+			 , B.RESP_EMAIL 
+			 , B.RESP_MBTLNUM 
+		 FROM  PTL_RESPONSIBLE_PERSON A, PTL_RESP_MNG B
+		WHERE  A.RESP_CD = B.RESP_ID 
+		  AND  A.PROJ_ID = #{proj_id}
+		  AND  RESP_GB = 'R'
+	</select>
+	
+	
+	<!-- 연구과제 신청 수정 -->
+	<update id="updateReq" parameterType="java.util.Map">
+	/* updateReq */
+		UPDATE  PTL_PROJECT
+		   SET  PROJ_RECPT_NO = #{proj_recpt_no,  jdbcType = VARCHAR}
+		      , PROJ_TYPE_CD  = #{proj_type_cd,  jdbcType = VARCHAR}
+		      , RND_GB  = #{rnd_gb,  jdbcType = VARCHAR}
+		  	  , TECH_CLS_CD1  = #{tech_cls_cd1,  jdbcType = VARCHAR}
+		  	  , WEIGHT1  = #{weight1,  jdbcType = VARCHAR}
+		  	  , TECH_CLS_CD2  = #{tech_cls_cd2,  jdbcType = VARCHAR}
+		  	  , WEIGHT2  = #{weight2,  jdbcType = VARCHAR}
+		  	  , TECH_CLS_CD3  = #{tech_cls_cd3,  jdbcType = VARCHAR}
+		  	  , WEIGHT3  = #{weight3,  jdbcType = VARCHAR}
+		  	  , SECURTY_LEVL_CD  = #{securty_levl_cd,  jdbcType = VARCHAR}
+			  , PROJ_NM_KOR = #{proj_nm_kor,  jdbcType = VARCHAR}
+			  , PROJ_NM_ENG = #{proj_nm_eng,  jdbcType = VARCHAR}
+			  , LEAD_ORG_CD = #{lead_org_cd,  jdbcType = VARCHAR}
+			  , PERFORM_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{perform_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									   ELSE DATE_FORMAT(STR_TO_DATE(#{perform_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								  END)
+			  , PERFORM_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{perform_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									  ELSE DATE_FORMAT(STR_TO_DATE(#{perform_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								 END)
+			  , STEP1_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step1_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									 ELSE DATE_FORMAT(STR_TO_DATE(#{step1_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								END)
+			  , STEP1_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step1_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									ELSE DATE_FORMAT(STR_TO_DATE(#{step1_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+							   END)
+			  , STEP2_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step2_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									 ELSE DATE_FORMAT(STR_TO_DATE(#{step2_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								END)
+			  , STEP2_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step2_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									ELSE DATE_FORMAT(STR_TO_DATE(#{step2_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+							   END)
+			  , STEP3_STRTDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step3_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									 ELSE DATE_FORMAT(STR_TO_DATE(#{step3_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+								END)
+			  , STEP3_ENDDT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{step3_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+									ELSE DATE_FORMAT(STR_TO_DATE(#{step3_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+							   END)
+			  , TOT_COST = #{tot_cost_val,  jdbcType = VARCHAR}
+			  , GOV_COST = #{gov_cost_val,  jdbcType = VARCHAR}
+			  , CASH = #{cash_val,  jdbcType = VARCHAR}
+			  , STOCK = #{stock_val,  jdbcType = VARCHAR}
+			  , REG_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{reg_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+							   ELSE DATE_FORMAT(STR_TO_DATE(#{reg_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+						  END)
+			  , AGMT_GB = #{agmt_gb,  jdbcType = VARCHAR}
+			  , AGMT_DT = (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{agmt_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+								ELSE DATE_FORMAT(STR_TO_DATE(#{agmt_dt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+						   END)
+			  , AGMT_INFO = #{agmt_info,  jdbcType = VARCHAR}
+			  , MODIFY_ID = #{modify_id,  jdbcType = VARCHAR}
+			  , MODIFY_DTTM = NOW()
+		 WHERE  1=1
+		   AND  DEL_YN = 'N'
+		   AND  PROJ_ID = #{proj_id}
+	</update>
+	
+	<!-- 연구과제 신청 삭제시 선정단계인지 체크 - SEL_GB : 0 만 삭제 가능  -->
+	<select id="chkSelGb" parameterType="java.util.Map" resultType="int">
+	/* chkSelGb */
+	SELECT  COUNT(1)
+      FROM  PTL_PROJECT
+     WHERE  1=1
+       AND  PROJ_ID = #{proj_id}
+       AND  DEL_YN = 'N'
+       AND  SEL_GB = '1'
+	</select>
+	
+		
+	<!-- 연구과제 신청 삭제 -->
+	<delete id="deleteReq" parameterType="java.util.Map">
+	/* deleteReq */
+		 UPDATE  PTL_PROJECT
+		    SET  DEL_YN = 'Y'
+		  WHERE  1=1
+		    AND  DEL_YN = 'N'
+		    AND  PROJ_ID = #{proj_id}
+	</delete>
+	
+	<!-- 연구과제 신청 삭제 시 기관 삭제 -->
+	<delete id="deletePartOrg" parameterType="java.util.Map">
+	/* deletePatrOrg */
+		DELETE  FROM  PTL_PARTICIPATE_ORG
+		 WHERE  PROJ_ID = #{proj_id}
+	</delete>
+	
+	
+	<!-- 연구과제 신청 삭제 시 책임자 삭제  -->
+	<delete id="deleteRespPerson" parameterType="java.util.Map">
+	/* deleteRespPerson */
+	DELETE  FROM   PTL_RESPONSIBLE_PERSON
+		   WHERE  1=1 
+		     AND  PROJ_ID = #{proj_id}
+	</delete>
+
+
+	
+
+	
+</mapper>

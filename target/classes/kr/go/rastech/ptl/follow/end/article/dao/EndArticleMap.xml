@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.follow.end.article.dao.EndArticleDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 최종사후관리 논문 list -->
+	<select id="selectEndArticleList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectEndArticleList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT  A.END_ARTCL_ID
+			  , A.PROJ_END_ID
+			  , A.END_ARTCL_NM
+			  , A.END_ARTCL_AUTH
+			  , A.END_JOUNAL_INFO
+			  , A.END_ARTCL_SCI_GB
+			  , A.END_ARTCL_DOMESTIC_GB
+			  , A.CREATE_ID
+			  , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') AS CREATE_DTTM
+		  FROM  PTL_END_FOLLOW_ARTICLE A, (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		 WHERE  1=1  
+ 		   AND  A.PROJ_END_ID = #{proj_end_id}
+ 	  ORDER BY  A.END_ARTCL_NM DESC
+	 	<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 최종사후관리 논문 count -->
+	<select id="selectEndArticleListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectEndArticleListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_END_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  PROJ_END_ID = #{proj_end_id}
+	</select>
+	
+	
+	<!-- 최종사후관리 논문 상세보기 -->
+	<select id="selectEndArticleDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectEndArticleDtl */
+		SELECT  END_ARTCL_ID
+			  , PROJ_END_ID
+			  , END_ARTCL_NM
+			  , END_ARTCL_AUTH
+			  , END_JOUNAL_INFO
+			  , END_ARTCL_SCI_GB
+			  , END_ARTCL_DOMESTIC_GB
+			  , CREATE_ID
+			  , DATE_FORMAT(CREATE_DTTM,'%Y-%M-%D') AS CREATE_DTTM
+		  FROM  PTL_END_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  END_ARTCL_ID = #{end_artcl_id} 
+	</select>	
+	
+	
+	<!-- 최종사후관리 논문 등록 -->
+	<insert id="insertEndArticle" parameterType="java.util.Map">
+	/* insertEndArticle */
+		  INSERT INTO PTL_END_FOLLOW_ARTICLE (
+				  END_ARTCL_ID
+				, PROJ_END_ID
+				, END_ARTCL_NM
+				, END_ARTCL_AUTH
+				, END_JOUNAL_INFO
+				, END_ARTCL_SCI_GB
+				, END_ARTCL_DOMESTIC_GB
+				, CREATE_ID
+				, CREATE_DTTM
+			) VALUES (
+				<choose>
+					<when test="end_artcl_id != null and end_artcl_id != ''">
+						#{end_artcl_id, jdbcType=VARCHAR}	
+					</when>		
+					<otherwise>
+						NEXTVAL(PTL_END_FOLLOW_ARTICLE_SEQ)
+					</otherwise>			
+				</choose>
+				, #{proj_end_id_article, jdbcType=VARCHAR}	
+				, #{end_artcl_nm, jdbcType=VARCHAR}	
+				, #{end_artcl_auth, jdbcType=VARCHAR}	
+				, #{end_jounal_info, jdbcType=VARCHAR}	
+				, #{end_artcl_sci_gb, jdbcType=VARCHAR}	
+				, #{end_artcl_domestic_gb, jdbcType=VARCHAR}	
+				, #{create_id, jdbcType=VARCHAR}	
+				, NOW()
+		   ) ON DUPLICATE KEY UPDATE
+				  END_ARTCL_NM = #{end_artcl_nm, jdbcType=VARCHAR}	
+				, END_ARTCL_AUTH = #{end_artcl_auth, jdbcType=VARCHAR}
+				, END_JOUNAL_INFO = #{end_jounal_info, jdbcType=VARCHAR}
+				, END_ARTCL_SCI_GB = #{end_artcl_sci_gb, jdbcType=VARCHAR}
+				, END_ARTCL_DOMESTIC_GB = #{end_artcl_domestic_gb, jdbcType=VARCHAR}
+				, MODIFY_ID = #{modify_id, jdbcType=VARCHAR}
+				, MODIFY_DTTM = NOW()
+    </insert>
+    
+    
+    <!-- 최종사후관리 논문 삭제 -->
+	<delete id="deleteEndArticle" parameterType="java.util.Map">
+	/* deleteEndArticle */
+		DELETE
+		  FROM  PTL_END_FOLLOW_ARTICLE
+		 WHERE  1=1
+		   AND  END_ARTCL_ID = #{end_artcl_id} 
+		
+	</delete>
+	
+	
+	
+	
+</mapper>

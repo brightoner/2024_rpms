@@ -1,0 +1,51 @@
+
+#feature {
+    position: relative;
+    margin: 20px 0;
+}
+
+    #feature > div {
+        border: 1px solid #cecccc;
+        position:relative;
+        margin: 0 -1px;
+    	overflow:hidden;
+    	height: 175px;
+    	width: 620px;
+    }
+    
+     #feature div.items {
+         position:absolute;
+         width:20000em;
+     }
+     
+         #feature div.items div {
+            float: left;
+         }
+         
+        #feature div.items img {
+            border: none;
+        }
+ 
+     #feature .next,
+     #feature .prev {
+         cursor: pointer;
+         display: block;
+         font-size: 30px;
+         line-height: 1;
+         position: absolute;
+         margin-top: -15px;
+         right: -40px;
+         top: 50%;
+         text-decoration: none;
+         text-shadow: rgba(0, 0, 0, 0.75) 1px 1px 2px;
+     }
+
+     #feature .prev {
+         left: -35px;
+         right: auto;
+     }
+     
+     #feature a.disabled {
+         color: #BBB;
+         cursor: auto;
+     }

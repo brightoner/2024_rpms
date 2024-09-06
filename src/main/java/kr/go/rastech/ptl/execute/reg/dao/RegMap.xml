@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.rastech.ptl.execute.reg.dao.RegDao">
+ <sql id="getPagingSelect">
+   SELECT  @rownum:=@rownum+1 as  data_seq, D.*
+     FROM (
+ </sql>
+
+ <sql id="getPagingWhere">
+ <![CDATA[
+             ) D		 
+	    LIMIT #{length, jdbcType=INTEGER} OFFSET #{start, jdbcType=INTEGER}
+ ]]>
+ </sql>
+ 
+ 	<!-- 협약과제 전체 list -->
+	<select id="selectProjRegList"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+ 	/* selectProjRegList */ 	
+		<include refid="getPagingSelect"></include>
+		SELECT B.ANN_ID
+		     , B.DEPT_ORG
+		  	 , B.DDCT_ORG
+		  	 , B.ANN_NM
+		  	 , B.FILE_GROUP
+		  	 , A.PROJ_ID
+		  	 , A.PROJ_RECPT_NO
+		  	 , A.PROJ_TYPE_CD
+		  	 , A.RND_GB
+		  	 , A.TECH_CLS_CD1
+		  	 , A.WEIGHT1
+		  	 , A.TECH_CLS_CD2
+		  	 , A.WEIGHT2
+		  	 , A.TECH_CLS_CD3
+		  	 , A.WEIGHT3
+		  	 , A.SECURTY_LEVL_CD
+		     , A.PROJ_NM_KOR
+		     , A.PROJ_NM_ENG
+		     , A.LEAD_ORG_CD
+		     , DATE_FORMAT(A.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(A.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , DATE_FORMAT(A.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+		     , DATE_FORMAT(A.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+		     , DATE_FORMAT(A.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+		     , DATE_FORMAT(A.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+		     , DATE_FORMAT(A.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+		     , DATE_FORMAT(A.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+		     , A.TOT_COST
+		     , A.GOV_COST
+		     , A.CASH
+		     , A.STOCK
+		     , A.REQ_GB
+		     , DATE_FORMAT(A.REQ_DT,'%Y-%m-%d') AS REQ_DT
+		     , case when A.AGMT_DT = '' or A.AGMT_DT is null then ''
+		            else DATE_FORMAT(A.AGMT_DT, '%Y-%m-%d') 
+		       end as AGMT_DT
+		     , A.CREATE_ID
+		     , DATE_FORMAT(A.CREATE_DTTM,'%Y-%m-%d') as CREATE_DTTM
+		 FROM  PTL_PROJECT A
+    LEFT JOIN  PTL_ANNOUNCE B
+		   ON  A.ANN_ID = B.ANN_ID 
+   INNER JOIN  (SELECT @rownum:= #{rownum, jdbcType=INTEGER}) R
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  A.AGMT_GB	= '1'
+		<if test="dept_org != null and dept_org !=''">
+		  AND  B.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  B.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	 ORDER BY  A.PROJ_ID DESC
+		<include refid="getPagingWhere"></include>
+	</select>
+	
+	<!-- 협약과제 전체 list count -->
+	<select id="selectProjRegListCount"  parameterType="java.util.Map"  resultType="integer">
+	/* selectProjRegListCount */ 
+		SELECT  COUNT(1) AS CNT
+	      FROM  PTL_PROJECT A
+    LEFT JOIN  PTL_ANNOUNCE B
+		   ON  A.ANN_ID = B.ANN_ID 
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  A.AGMT_GB	= '1'
+		<if test="dept_org != null and dept_org !=''">
+		  AND  B.DEPT_ORG = #{dept_org}
+		</if>
+		<if test="ddct_org != null and ddct_org !=''">
+		  AND  B.DDCT_ORG = #{ddct_org}
+		</if>
+		<if test="searchword != null and searchword !=''">
+		  AND  A.PROJ_NM_KOR LIKE CONCAT('%', #{searchword}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 협약과제 상세보기 -->
+	<select id="selectProjRegDtl"  parameterType="java.util.Map"  resultType="kr.go.rastech.commons.utils.LowerKeyMap">
+	/* selectProjRegDtl */
+		SELECT B.ANN_ID
+		     , B.DEPT_ORG
+		  	 , B.DDCT_ORG
+		  	 , B.ANN_NM
+		  	 , B.FILE_GROUP
+		  	 , A.PROJ_ID
+		  	 , A.PROJ_RECPT_NO
+		  	 , A.PROJ_TYPE_CD
+		  	 , A.RND_GB
+		  	 , A.TECH_CLS_CD1
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = A.TECH_CLS_CD1 ) AS TECH_CLS_NM1
+		  	 , A.WEIGHT1
+		  	 , A.TECH_CLS_CD2
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = A.TECH_CLS_CD2 ) AS TECH_CLS_NM2
+		  	 , A.WEIGHT2
+		  	 , A.TECH_CLS_CD3
+		  	 , (SELECT D.TCLS_NM FROM PTL_TECH_CLS_CODE D WHERE D.TCLS_ID = A.TECH_CLS_CD3 ) AS TECH_CLS_NM3
+		  	 , A.WEIGHT3
+		  	 , A.SECURTY_LEVL_CD
+		     , A.PROJ_NM_KOR
+		     , A.PROJ_NM_ENG
+		     , A.TOT_COST
+		     , A.GOV_COST
+		     , A.CASH
+		     , A.STOCK
+		     , DATE_FORMAT(A.PERFORM_STRTDT,'%Y-%m-%d') AS PERFORM_STRTDT
+		     , DATE_FORMAT(A.PERFORM_ENDDT,'%Y-%m-%d') AS PERFORM_ENDDT
+		     , DATE_FORMAT(A.STEP1_STRTDT,'%Y-%m-%d') AS STEP1_STRTDT
+		     , DATE_FORMAT(A.STEP1_ENDDT,'%Y-%m-%d') AS STEP1_ENDDT
+		     , DATE_FORMAT(A.STEP2_STRTDT,'%Y-%m-%d') AS STEP2_STRTDT
+		     , DATE_FORMAT(A.STEP2_ENDDT,'%Y-%m-%d') AS STEP2_ENDDT
+		     , DATE_FORMAT(A.STEP3_STRTDT,'%Y-%m-%d') AS STEP3_STRTDT
+		     , DATE_FORMAT(A.STEP3_ENDDT,'%Y-%m-%d') AS STEP3_ENDDT
+		     , A.AGMT_GB
+		     , DATE_FORMAT(A.AGMT_DT,'%Y-%m-%d') AS AGMT_DT
+		     , A.AGMT_INFO
+		 FROM  PTL_PROJECT A
+    LEFT JOIN  PTL_ANNOUNCE B
+		   ON  A.ANN_ID = B.ANN_ID
+	LEFT JOIN  PTL_ORG_MNG C
+		   ON  A.LEAD_ORG_CD = C.ORG_ID  
+		WHERE  1=1
+		  AND  A.DEL_YN ='N'	
+		  AND  A.PROJ_ID = #{proj_id} 
+	</select>	
+	
+	
+	<!-- 연차과제  등록 -->
+	<insert id="insertProjYear" parameterType="java.util.Map">
+	/* insertProjYear */
+	<selectKey keyProperty="proj_year_id" resultType="string" order="BEFORE">
+       (SELECT CONCAT('YEAR_' , LPAD(NEXTVAL(PTL_PROJECT_YEAR_SEQ),15,0 )) FROM DUAL)
+	</selectKey>
+		INSERT INTO PTL_PROJECT_YEAR (
+            PROJ_YEAR_ID  
+          , PROJ_ID
+		  , PROJ_YEAR_GB
+		  , PROJ_STEP_GB
+		  , PROJ_RECPT_NO
+		  , PROJ_TYPE_CD
+		  , RND_GB
+		  , TECH_CLS_CD1
+		  , WEIGHT1
+		  , TECH_CLS_CD2
+		  , WEIGHT2
+		  , TECH_CLS_CD3
+		  , WEIGHT3
+		  , SECURTY_LEVL_CD
+		  , PROJ_NM_KOR
+		  , PROJ_NM_ENG
+		  , CUR_STRTDT
+		  , CUR_ENDDT
+		  , TOT_COST
+		  , GOV_COST
+		  , CASH
+		  , STOCK
+		  , DEL_YN
+		  , YEAR_FILE_GROUP
+		  , CREATE_ID
+		  , CREATE_DTTM
+		) VALUES (
+	        #{proj_year_id}
+	      , #{proj_id,  jdbcType = VARCHAR}
+		  , #{proj_year_gb,  jdbcType = VARCHAR}
+		  , #{proj_step_gb,  jdbcType = VARCHAR}
+		  , #{proj_recpt_no,  jdbcType = VARCHAR}
+		  , #{proj_type_cd,  jdbcType = VARCHAR}
+		  , #{rnd_gb,  jdbcType = VARCHAR}
+		  , #{tech_cls_cd1,  jdbcType = VARCHAR}
+		  , #{weight1,  jdbcType = VARCHAR}
+		  , #{tech_cls_cd2,  jdbcType = VARCHAR}
+		  , #{weight2,  jdbcType = VARCHAR}
+		  , #{tech_cls_cd3,  jdbcType = VARCHAR}
+		  , #{weight3,  jdbcType = VARCHAR}
+		  , #{securty_levl_cd,  jdbcType = VARCHAR}
+		  , #{proj_nm_kor,  jdbcType = VARCHAR}
+		  , #{proj_nm_eng,  jdbcType = VARCHAR}
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{cur_strtdt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+		     END)
+		  , (CASE WHEN DATE_FORMAT(STR_TO_DATE(#{cur_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') = '00000000' THEN '' 
+			      ELSE DATE_FORMAT(STR_TO_DATE(#{cur_enddt, jdbcType=VARCHAR}, '%Y-%m-%d'), '%Y%m%d') 
+		     END)
+		  , #{tot_cost,  jdbcType = VARCHAR}
+		  , #{gov_cost,  jdbcType = VARCHAR}
+		  , #{cash,  jdbcType = VARCHAR}
+		  , #{stock,  jdbcType = VARCHAR}
+		  , 'N'
+		  , #{year_file_group, jdbcType = VARCHAR}
+		  , #{create_id,  jdbcType = VARCHAR}
+		  , NOW()
+		)
+	</insert>
+	
+	
+	<!-- 연차과제 생성시 생성 연차 확인 -->
+	<select id="chkYear" parameterType="java.util.Map"  resultType="int">
+	/* chkYear */
+		SELECT  COUNT(1)
+		  FROM  PTL_PROJECT_YEAR A
+	 LEFT JOIN  PTL_PROJECT B
+		    ON  A.PROJ_ID = B.PROJ_ID 
+		 WHERE  1=1
+		   AND  B.PROJ_ID = #{proj_id}
+		   AND  A.PROJ_YEAR_GB = #{proj_year_gb}
+		   AND  A.PROJ_STEP_GB = #{proj_step_gb}
+		   AND  A.DEL_YN ='N'
+	
+	</select>
+	
+</mapper>
